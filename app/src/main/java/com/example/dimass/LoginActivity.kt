@@ -6,13 +6,17 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.text.ClickableText
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -21,7 +25,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextField
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -33,6 +37,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -65,6 +70,7 @@ class LoginActivity : ComponentActivity() {
             ){
                 Logo()
                 Form()
+                SignUpOption()
             }
         }
     }
@@ -98,7 +104,8 @@ class LoginActivity : ComponentActivity() {
                 Text("Email")
             },
             modifier = Modifier
-                .padding(0.dp, 40.dp, 0.dp, 10.dp)
+                .fillMaxWidth(0.6f)
+                .padding(0.dp, 40.dp, 0.dp, 0.dp)
         )
 
         OutlinedTextField(
@@ -111,7 +118,8 @@ class LoginActivity : ComponentActivity() {
                 Text("Password")
             },
             modifier = Modifier
-                .padding(0.dp, 10.dp)
+                .fillMaxWidth(0.6f)
+                .padding(0.dp, 0.dp)
         )
 
         ElevatedButton(
@@ -122,15 +130,37 @@ class LoginActivity : ComponentActivity() {
             },
             content = { Text(
                 "Login",
-                fontSize = 18.sp
+                fontSize = 16.sp
             ) },
             colors = ButtonDefaults.elevatedButtonColors(
                 containerColor = BottleGreen,
                 contentColor = Color.White
             ),
             modifier = Modifier
-                .size(170.dp, 45.dp),
+                .padding(0.dp, 50.dp)
+                .fillMaxWidth(0.6f)
+                .fillMaxHeight(0.15f)
         )
+    }
+
+    @Composable
+    fun SignUpOption(){
+        val context = LocalContext.current
+
+        Row (
+            verticalAlignment = Alignment.CenterVertically
+        ){
+            Text("Don't have an account? ")
+            Text(
+                "Sign Up",
+                color = Color.Blue,
+                fontWeight = FontWeight.Bold,
+                modifier = Modifier
+                    .clickable {
+                        Toast.makeText(context, "Sign Up Page Redirect", Toast.LENGTH_LONG).show()
+                    }
+            )
+        }
     }
 
     @Preview(showBackground = true)
