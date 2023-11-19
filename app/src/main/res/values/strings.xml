@@ -1,3 +1,5 @@
 <resources>
     <string name="app_name">DIMASS</string>
+    <string name="title_activity_new_user">NewUserActivity</string>
+    <string name="title_activity_main_page">MainPageActivity</string>
 </resources>

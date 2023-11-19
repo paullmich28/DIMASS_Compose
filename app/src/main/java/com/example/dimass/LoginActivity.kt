@@ -1,5 +1,6 @@
 package com.example.dimass
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -66,11 +67,23 @@ class LoginActivity : ComponentActivity() {
             contentAlignment = Alignment.TopCenter
         ){
             Column(
-                horizontalAlignment = Alignment.CenterHorizontally
+                Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
             ){
-                Logo()
-                Form()
-                SignUpOption()
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
+                    Logo()
+                    Form()
+                }
+
+                Row(
+                    modifier = Modifier
+                        .weight(1f, false)
+                        .padding(0.dp, 20.dp)
+                ){
+                    SignUpOption()
+                }
             }
         }
     }
@@ -93,6 +106,7 @@ class LoginActivity : ComponentActivity() {
         var password by remember {mutableStateOf("")}
         
         val context = LocalContext.current
+
 
         OutlinedTextField(
             value = email,
@@ -139,28 +153,22 @@ class LoginActivity : ComponentActivity() {
             modifier = Modifier
                 .padding(0.dp, 50.dp)
                 .fillMaxWidth(0.6f)
-                .fillMaxHeight(0.15f)
         )
     }
 
     @Composable
     fun SignUpOption(){
         val context = LocalContext.current
-
-        Row (
-            verticalAlignment = Alignment.CenterVertically
-        ){
-            Text("Don't have an account? ")
-            Text(
-                "Sign Up",
-                color = Color.Blue,
-                fontWeight = FontWeight.Bold,
-                modifier = Modifier
-                    .clickable {
-                        Toast.makeText(context, "Sign Up Page Redirect", Toast.LENGTH_LONG).show()
-                    }
-            )
-        }
+        Text("Don't have an account? ")
+        Text(
+            "Sign Up",
+            color = Color.Blue,
+            fontWeight = FontWeight.Bold,
+            modifier = Modifier
+                .clickable {
+                    startActivity(Intent(this@LoginActivity, SignUpActivity::class.java))
+                }
+        )
     }
 
     @Preview(showBackground = true)
