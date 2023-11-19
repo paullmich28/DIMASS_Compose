@@ -1,4 +1,4 @@
-package com.example.dimass
+package com.example.dimass.activities
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity

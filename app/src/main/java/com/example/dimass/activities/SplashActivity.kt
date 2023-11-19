@@ -1,4 +1,4 @@
-package com.example.dimass
+package com.example.dimass.activities
 
 import android.annotation.SuppressLint
 import android.content.Intent
@@ -21,6 +21,7 @@ import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.dimass.R
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.LightGreen
 import kotlinx.coroutines.delay

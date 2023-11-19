@@ -1,15 +1,14 @@
-package com.example.dimass
+package com.example.dimass.activities
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
+import com.example.dimass.MainScreen
 import com.example.dimass.ui.theme.DIMASSTheme
 
 class MainPageActivity : ComponentActivity() {
@@ -22,25 +21,17 @@ class MainPageActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    Greeting2("Android")
+                    MainScreen()
                 }
             }
         }
     }
-}
 
-@Composable
-fun Greeting2(name: String, modifier: Modifier = Modifier) {
-    Text(
-        text = "Hello $name!",
-        modifier = modifier
-    )
-}
-
-@Preview(showBackground = true)
-@Composable
-fun GreetingPreview2() {
-    DIMASSTheme {
-        Greeting2("Android")
+    @Preview(showBackground = true)
+    @Composable
+    fun MainPagePreview(){
+        DIMASSTheme {
+            MainScreen()
+        }
     }
 }
