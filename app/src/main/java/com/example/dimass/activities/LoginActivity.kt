@@ -35,6 +35,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -121,6 +122,7 @@ class LoginActivity : ComponentActivity() {
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password
             ),
+            visualTransformation = PasswordVisualTransformation(),
             label = {
                 Text("Password")
             },
@@ -133,6 +135,8 @@ class LoginActivity : ComponentActivity() {
             onClick = {
                 if(email.isEmpty() || password.isEmpty()){
                     Toast.makeText(context, "Your account isn't valid", Toast.LENGTH_LONG).show()
+                }else{
+                    startActivity(Intent(this@LoginActivity, MainPageActivity::class.java))
                 }
             },
             content = { Text(

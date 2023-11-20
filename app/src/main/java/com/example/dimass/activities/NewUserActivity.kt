@@ -1,5 +1,6 @@
 package com.example.dimass.activities
 
+import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -42,12 +43,7 @@ class NewUserActivity : ComponentActivity() {
         setContent {
             DIMASSTheme {
                 // A surface container using the 'background' color from the theme
-                Surface(
-                    modifier = Modifier.fillMaxSize(),
-                    color = MaterialTheme.colorScheme.background
-                ) {
-
-                }
+                NewUserPage()
             }
         }
     }
@@ -82,7 +78,7 @@ class NewUserActivity : ComponentActivity() {
             value = weight,
             onValueChange = {weight = it},
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
+                keyboardType = KeyboardType.Decimal
             ),
             label = { Text("Weight (in kg)") },
             modifier = Modifier
@@ -93,7 +89,7 @@ class NewUserActivity : ComponentActivity() {
             value = height,
             onValueChange = {height = it},
             keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Number
+                keyboardType = KeyboardType.Decimal
             ),
             label = { Text("Height (in cm)") },
             modifier = Modifier
@@ -108,7 +104,14 @@ class NewUserActivity : ComponentActivity() {
                 ){
                     Toast.makeText(context, "Please fill the form", Toast.LENGTH_LONG).show()
                 }else{
-                    Toast.makeText(context, "Redirected to next page", Toast.LENGTH_LONG).show()
+                    val bundle = Bundle()
+                    val intent = Intent(this@NewUserActivity, BmiActivity::class.java)
+
+                    bundle.putFloat("weight", weight.toFloat())
+                    bundle.putFloat("height", height.toFloat())
+                    intent.putExtras(bundle)
+
+                    startActivity(intent)
                 }
             },
             content = { Text(
