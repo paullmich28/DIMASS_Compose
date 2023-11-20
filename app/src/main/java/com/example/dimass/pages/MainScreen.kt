@@ -1,4 +1,4 @@
-package com.example.dimass
+package com.example.dimass.pages
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.layout.RowScope
@@ -18,7 +18,6 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.dimass.model.BottomBarScreen
 import com.example.dimass.ui.theme.BottleGreen
-import com.example.dimass.ui.theme.LightGreen
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)

@@ -8,7 +8,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
-import com.example.dimass.MainScreen
+import com.example.dimass.pages.MainScreen
 import com.example.dimass.ui.theme.DIMASSTheme
 
 class MainPageActivity : ComponentActivity() {

@@ -1,4 +1,4 @@
-package com.example.dimass
+package com.example.dimass.pages
 
 import androidx.compose.runtime.Composable
 import androidx.navigation.NavHostController
