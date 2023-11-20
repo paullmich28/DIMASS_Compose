@@ -69,18 +69,16 @@ class SignUpActivity : ComponentActivity() {
                         startActivity(Intent(this@SignUpActivity, LoginActivity::class.java))
                     }
             )
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ){
-                Logo()
-                Form()
+            Column{
+                LogoSignUp()
+                FormSignUp()
             }
         }
     }
 
 
     @Composable
-    fun Logo(){
+    fun LogoSignUp(){
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo",
@@ -91,7 +89,7 @@ class SignUpActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun Form(){
+    fun FormSignUp(){
         var firstName by remember { mutableStateOf("") }
         var lastName by remember { mutableStateOf("") }
         var email by remember{ mutableStateOf("") }
@@ -170,6 +168,18 @@ class SignUpActivity : ComponentActivity() {
                 }else{
                     if(password != confirmPassword){
                         Toast.makeText(context, "Password and confirm password must be the same", Toast.LENGTH_LONG).show()
+                    }else{
+                        val bundle = Bundle()
+                        val intent = Intent(this@SignUpActivity, NewUserActivity::class.java)
+
+                        bundle.putString("fName", firstName)
+                        bundle.putString("lName", lastName)
+                        bundle.putString("email", email)
+                        bundle.putString("password", password)
+
+                        intent.putExtras(bundle)
+
+                        startActivity(intent)
                     }
                 }
             },

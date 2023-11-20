@@ -66,11 +66,9 @@ class LoginActivity : ComponentActivity() {
                 Modifier.fillMaxHeight(),
                 verticalArrangement = Arrangement.SpaceBetween
             ){
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ){
-                    Logo()
-                    Form()
+                Column{
+                    LogoSignIn()
+                    FormSignIn()
                 }
 
                 Row(
@@ -85,7 +83,7 @@ class LoginActivity : ComponentActivity() {
     }
 
     @Composable
-    fun Logo(){
+    fun LogoSignIn(){
         Image(
             painter = painterResource(id = R.drawable.logo),
             contentDescription = "Logo",
@@ -97,12 +95,11 @@ class LoginActivity : ComponentActivity() {
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun Form(){
+    fun FormSignIn(){
         var email by remember { mutableStateOf("") }
         var password by remember {mutableStateOf("")}
         
         val context = LocalContext.current
-
 
         OutlinedTextField(
             value = email,

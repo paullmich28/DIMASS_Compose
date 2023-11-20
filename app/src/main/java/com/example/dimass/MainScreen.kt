@@ -10,12 +10,15 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.ui.graphics.Color
 import androidx.navigation.NavDestination
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.dimass.model.BottomBarScreen
+import com.example.dimass.ui.theme.BottleGreen
+import com.example.dimass.ui.theme.LightGreen
 
 @SuppressLint("UnusedMaterial3ScaffoldPaddingParameter")
 @OptIn(ExperimentalMaterial3Api::class)
@@ -41,7 +44,9 @@ fun BottomBar(navController: NavHostController){
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    BottomNavigation {
+    BottomNavigation(
+        backgroundColor = BottleGreen
+    ) {
         screens.forEach{ screen ->
             AddItem(
                 screen = screen,
@@ -61,12 +66,16 @@ fun RowScope.AddItem(
 ){
     BottomNavigationItem(
         label = {
-            Text(text = screen.title)
+            Text(
+                text = screen.title,
+                color = Color.LightGray
+            )
         },
         icon = {
             Icon(
                 contentDescription = "Navigation Icon",
-                imageVector = screen.icon
+                imageVector = screen.icon,
+                tint = Color.LightGray
             )
         },
         selected = currentDestination?.hierarchy?.any{
@@ -74,6 +83,6 @@ fun RowScope.AddItem(
         } == true,
         onClick = {
             navController.navigate(screen.route)
-        }
+        },
     )
 }
