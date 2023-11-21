@@ -50,15 +50,24 @@ class NewUserActivity : ComponentActivity() {
 
     @Composable
     fun NewUserPage(){
+        var fName = ""
+        var lName = ""
+
+        if(intent.extras != null){
+            fName = intent.extras!!.getString("fName", "User ")
+            lName = intent.extras!!.getString("lName", "1")
+        }
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(LightGreen),
-            contentAlignment = Alignment.TopCenter
+            contentAlignment = Alignment.Center
         ){
             Column(
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                GreetingText(fName, lName)
                 FormNewUser()
             }
         }
@@ -72,8 +81,6 @@ class NewUserActivity : ComponentActivity() {
 
         val context = LocalContext.current
 
-        Spacer(modifier = Modifier.padding(0.dp, 15.dp))
-
         OutlinedTextField(
             value = weight,
             onValueChange = {weight = it},
@@ -82,6 +89,7 @@ class NewUserActivity : ComponentActivity() {
             ),
             label = { Text("Weight (in kg)") },
             modifier = Modifier
+                .padding(0.dp, 50.dp, 0.dp, 0.dp)
                 .fillMaxWidth(0.6f)
         )
 
@@ -129,8 +137,14 @@ class NewUserActivity : ComponentActivity() {
     }
 
     @Composable
-    fun GreetingText(){
+    fun GreetingText(fName: String, lName: String){
+        Text(
+            text = "Hello $fName $lName"
+        )
 
+        Text(
+            text = "Before we get started, please fill the form below"
+        )
     }
 
     @Preview(showBackground = true)
