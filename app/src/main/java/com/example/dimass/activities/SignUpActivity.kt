@@ -36,11 +36,19 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.dimass.R
+import com.example.dimass.model.Account
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.LightGreen
+import com.google.firebase.Firebase
+import com.google.firebase.FirebaseApp
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.database
 
 class SignUpActivity : ComponentActivity() {
+
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -95,6 +103,10 @@ class SignUpActivity : ComponentActivity() {
         var email by remember{ mutableStateOf("") }
         var password by remember{ mutableStateOf("") }
         var confirmPassword by remember{ mutableStateOf("") }
+
+        val dbRef = Firebase
+            .database("https://dimass-database-default-rtdb.asia-southeast1.firebasedatabase.app/")
+            .getReference("account")
 
         val context = LocalContext.current
 
@@ -169,16 +181,17 @@ class SignUpActivity : ComponentActivity() {
                     if(password != confirmPassword){
                         Toast.makeText(context, "Password and confirm password must be the same", Toast.LENGTH_LONG).show()
                     }else{
-                        val bundle = Bundle()
+                        val id = dbRef.push().key!!
+                        val account = Account(id, firstName, lastName, email, password)
+
+                        dbRef.push().setValue(account)
+                            .addOnCompleteListener{
+                                Toast.makeText(context, "Account created", Toast.LENGTH_LONG).show()
+                            }.addOnFailureListener{
+                                Toast.makeText(context, "Account not created", Toast.LENGTH_LONG).show()
+                            }
+
                         val intent = Intent(this@SignUpActivity, NewUserActivity::class.java)
-
-                        bundle.putString("fName", firstName)
-                        bundle.putString("lName", lastName)
-                        bundle.putString("email", email)
-                        bundle.putString("password", password)
-
-                        intent.putExtras(bundle)
-
                         startActivity(intent)
                     }
                 }

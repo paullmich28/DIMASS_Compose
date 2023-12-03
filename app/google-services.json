@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1000504939732",
+    "project_id": "dimass-database",
+    "storage_bucket": "dimass-database.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1000504939732:android:46b4f46a4082bb7d2f1741",
+        "android_client_info": {
+          "package_name": "com.example.dimass"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDu19rDe0LEqKWB31PNyRz4u3SJBD6ETZ8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
