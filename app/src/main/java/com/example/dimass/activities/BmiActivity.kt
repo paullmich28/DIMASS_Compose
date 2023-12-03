@@ -42,6 +42,8 @@ import com.example.dimass.ui.theme.Green
 import com.example.dimass.ui.theme.LightGreen
 import com.example.dimass.ui.theme.Mustard
 import com.example.dimass.ui.theme.Red
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class BmiActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -56,19 +58,23 @@ class BmiActivity : ComponentActivity() {
 
     @Composable
     fun BmiText(){
-        var weight = 0f
-        var height = 0f
         var color = Green
         var category = ""
         var program = ""
 
-        if(intent.extras != null){
-            weight = intent.extras!!.getFloat("weight", 0f)
-            height = intent.extras!!.getFloat("height", 0f)
-        }
+        val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
-        val heightInM = height/100
-        val bmi = weight / (heightInM * heightInM)
+        val dbRef = FirebaseFirestore
+            .getInstance()
+            .collection("accounts")
+            .document(id)
+
+        var bmi by remember{ mutableStateOf(0f) }
+
+        dbRef.get()
+            .addOnSuccessListener {
+                bmi = it.data?.get("bmi") as Float
+            }
 
         if(bmi < 18.5){
             category = "Underweight"
