@@ -32,23 +32,18 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.dimass.R
-import com.example.dimass.model.Account
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.LightGreen
-import com.google.firebase.Firebase
-import com.google.firebase.FirebaseApp
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
-import com.google.firebase.database.database
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FirebaseFirestore
 
 class SignUpActivity : ComponentActivity() {
-
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -84,7 +79,6 @@ class SignUpActivity : ComponentActivity() {
         }
     }
 
-
     @Composable
     fun LogoSignUp(){
         Image(
@@ -104,9 +98,8 @@ class SignUpActivity : ComponentActivity() {
         var password by remember{ mutableStateOf("") }
         var confirmPassword by remember{ mutableStateOf("") }
 
-        val dbRef = Firebase
-            .database("https://dimass-database-default-rtdb.asia-southeast1.firebasedatabase.app/")
-            .getReference("account")
+        val dbAuth = FirebaseAuth.getInstance()
+        val dbStore = FirebaseFirestore.getInstance()
 
         val context = LocalContext.current
 
@@ -151,6 +144,7 @@ class SignUpActivity : ComponentActivity() {
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password
             ),
+            visualTransformation = PasswordVisualTransformation(),
             label = { Text("Password") },
             modifier = Modifier
                 .fillMaxWidth(0.6f)
@@ -162,6 +156,7 @@ class SignUpActivity : ComponentActivity() {
             keyboardOptions = KeyboardOptions(
                 keyboardType = KeyboardType.Password
             ),
+            visualTransformation = PasswordVisualTransformation(),
             label = { Text("Confirm Password") },
             modifier = Modifier
                 .fillMaxWidth(0.6f)
@@ -181,18 +176,29 @@ class SignUpActivity : ComponentActivity() {
                     if(password != confirmPassword){
                         Toast.makeText(context, "Password and confirm password must be the same", Toast.LENGTH_LONG).show()
                     }else{
-                        val id = dbRef.push().key!!
-                        val account = Account(id, firstName, lastName, email, password)
+                        dbAuth.createUserWithEmailAndPassword(email, password).addOnCompleteListener{
+                            if(it.isSuccessful){
+                                val id: String = dbAuth.currentUser?.uid ?: ""
+                                val hashMap = hashMapOf(
+                                    "firstName" to firstName,
+                                    "lastName" to lastName,
+                                    "weight" to 0f,
+                                    "height" to 0f,
+                                    "bmi" to 0f
+                                )
 
-                        dbRef.push().setValue(account)
-                            .addOnCompleteListener{
-                                Toast.makeText(context, "Account created", Toast.LENGTH_LONG).show()
-                            }.addOnFailureListener{
-                                Toast.makeText(context, "Account not created", Toast.LENGTH_LONG).show()
+                                dbStore.collection("accounts")
+                                    .document(id)
+                                    .set(hashMap)
+                                    .addOnCompleteListener{
+                                        Toast.makeText(context, "Account created", Toast.LENGTH_LONG).show()
+                                        val intent = Intent(this@SignUpActivity, NewUserActivity::class.java)
+                                        startActivity(intent)
+                                    }
+                            }else{
+                                Toast.makeText(context, it.exception.toString(), Toast.LENGTH_LONG).show()
                             }
-
-                        val intent = Intent(this@SignUpActivity, NewUserActivity::class.java)
-                        startActivity(intent)
+                        }
                     }
                 }
             },

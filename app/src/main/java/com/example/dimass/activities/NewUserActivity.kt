@@ -2,6 +2,7 @@ package com.example.dimass.activities
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -36,8 +37,13 @@ import androidx.compose.ui.unit.sp
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.LightGreen
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FirebaseFirestore
 
 class NewUserActivity : ComponentActivity() {
+    private lateinit var dbRef: DocumentReference
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -50,13 +56,22 @@ class NewUserActivity : ComponentActivity() {
 
     @Composable
     fun NewUserPage(){
-        var fName = ""
-        var lName = ""
+        var fName by remember{ mutableStateOf("") }
+        var lName by remember{ mutableStateOf("") }
 
-        if(intent.extras != null){
-            fName = intent.extras!!.getString("fName", "User ")
-            lName = intent.extras!!.getString("lName", "1")
-        }
+        val context = LocalContext.current
+
+        val id: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        dbRef = FirebaseFirestore
+            .getInstance()
+            .collection("accounts")
+            .document(id)
+
+        dbRef.get()
+            .addOnSuccessListener {
+                fName = it.data?.get("firstName").toString()
+                lName = it.data?.get("lastName").toString()
+            }
 
         Box(
             modifier = Modifier
@@ -80,6 +95,12 @@ class NewUserActivity : ComponentActivity() {
         var height by remember { mutableStateOf("") }
 
         val context = LocalContext.current
+
+        val id: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        val dbRef = FirebaseFirestore
+            .getInstance()
+            .collection("accounts")
+            .document(id)
 
         OutlinedTextField(
             value = weight,
@@ -112,13 +133,9 @@ class NewUserActivity : ComponentActivity() {
                 ){
                     Toast.makeText(context, "Please fill the form", Toast.LENGTH_LONG).show()
                 }else{
-                    val bundle = Bundle()
+
+
                     val intent = Intent(this@NewUserActivity, BmiActivity::class.java)
-
-                    bundle.putFloat("weight", weight.toFloat())
-                    bundle.putFloat("height", height.toFloat())
-                    intent.putExtras(bundle)
-
                     startActivity(intent)
                 }
             },
