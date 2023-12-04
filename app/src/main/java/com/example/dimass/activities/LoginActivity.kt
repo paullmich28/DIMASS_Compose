@@ -43,8 +43,42 @@ import com.example.dimass.R
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.LightGreen
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginActivity : ComponentActivity() {
+    private lateinit var dbRef: DocumentReference
+
+    override fun onStart() {
+        super.onStart()
+
+        if(FirebaseAuth.getInstance().currentUser != null){
+            val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+            var weight: Float = 0f
+            var height: Float = 0f
+
+            dbRef = FirebaseFirestore
+                .getInstance()
+                .collection("accounts")
+                .document(id)
+
+            dbRef.get()
+                .addOnSuccessListener {
+                    weight = it.data?.get("weight") as Float
+                    height = it.data?.get("height") as Float
+                }
+
+            if(weight == 0f || height == 0f){
+                val intent = Intent(this@LoginActivity, NewUserActivity::class.java)
+                startActivity(intent)
+            }else{
+                val intent = Intent(this@LoginActivity, MainPageActivity::class.java)
+                startActivity(intent)
+            }
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {

@@ -184,7 +184,8 @@ class SignUpActivity : ComponentActivity() {
                                     "lastName" to lastName,
                                     "weight" to 0f,
                                     "height" to 0f,
-                                    "bmi" to 0f
+                                    "bmi" to 0f,
+                                    "program" to ""
                                 )
 
                                 dbStore.collection("accounts")
@@ -194,6 +195,7 @@ class SignUpActivity : ComponentActivity() {
                                         Toast.makeText(context, "Account created", Toast.LENGTH_LONG).show()
                                         val intent = Intent(this@SignUpActivity, NewUserActivity::class.java)
                                         startActivity(intent)
+                                        finish()
                                     }
                             }else{
                                 Toast.makeText(context, it.exception.toString(), Toast.LENGTH_LONG).show()

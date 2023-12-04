@@ -58,9 +58,9 @@ class BmiActivity : ComponentActivity() {
 
     @Composable
     fun BmiText(){
-        var color = Green
-        var category = ""
-        var program = ""
+        val color: Color
+        val category: String
+        val program: String
 
         val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 

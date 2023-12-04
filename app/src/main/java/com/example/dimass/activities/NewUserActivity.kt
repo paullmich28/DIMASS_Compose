@@ -137,6 +137,7 @@ class NewUserActivity : ComponentActivity() {
                         )
                     )
                     startActivity(intent)
+                    finish()
                 }
             },
             content = { Text(
