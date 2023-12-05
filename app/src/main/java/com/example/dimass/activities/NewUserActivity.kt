@@ -38,7 +38,9 @@ import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 
 class NewUserActivity : ComponentActivity() {
-    private lateinit var dbRef: DocumentReference
+    override fun onStart() {
+        super.onStart()
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,12 +58,12 @@ class NewUserActivity : ComponentActivity() {
         var lName by remember{ mutableStateOf("") }
 
         val id: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-        dbRef = FirebaseFirestore
-            .getInstance()
+        val dbRef = FirebaseFirestore.getInstance()
+
+        dbRef
             .collection("accounts")
             .document(id)
-
-        dbRef.get()
+            .get()
             .addOnSuccessListener {
                 fName = it.data?.get("firstName").toString()
                 lName = it.data?.get("lastName").toString()

@@ -185,7 +185,8 @@ class SignUpActivity : ComponentActivity() {
                                     "weight" to 0f,
                                     "height" to 0f,
                                     "bmi" to 0f,
-                                    "program" to ""
+                                    "program" to "",
+                                    "profilePic" to ""
                                 )
 
                                 dbStore.collection("accounts")

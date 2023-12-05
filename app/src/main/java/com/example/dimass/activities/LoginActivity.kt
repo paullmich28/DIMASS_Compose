@@ -49,33 +49,39 @@ import com.google.firebase.firestore.FirebaseFirestore
 
 class LoginActivity : ComponentActivity() {
     private lateinit var dbRef: DocumentReference
+    private lateinit var dbAuth: FirebaseAuth
 
     override fun onStart() {
         super.onStart()
 
         if(FirebaseAuth.getInstance().currentUser != null){
             val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-            var weight: Float = 0f
-            var height: Float = 0f
+            var weight: String
+            var height: String
 
-            dbRef = FirebaseFirestore
-                .getInstance()
-                .collection("accounts")
-                .document(id)
+            var weightFloat = 0f
+            var heightFloat = 0f
 
-            dbRef.get()
-                .addOnSuccessListener {
-                    weight = it.data?.get("weight") as Float
-                    height = it.data?.get("height") as Float
-                }
-
-            if(weight == 0f || height == 0f){
-                val intent = Intent(this@LoginActivity, NewUserActivity::class.java)
-                startActivity(intent)
-            }else{
-                val intent = Intent(this@LoginActivity, MainPageActivity::class.java)
-                startActivity(intent)
-            }
+//            dbRef = FirebaseFirestore
+//                .getInstance()
+//                .collection("accounts")
+//                .document(id)
+//
+//            dbRef.get()
+//                .addOnSuccessListener {
+//                    weight = it.data?.get("weight").toString()
+//                    height = it.data?.get("height").toString()
+//                    weightFloat = weight.toFloat()
+//                    heightFloat = height.toFloat()
+//                }
+//
+//            if(weightFloat == 0f || heightFloat == 0f){
+//                val intent = Intent(this@LoginActivity, NewUserActivity::class.java)
+//                startActivity(intent)
+//            }else{
+//                val intent = Intent(this@LoginActivity, MainPageActivity::class.java)
+//                startActivity(intent)
+//            }
         }
     }
 
@@ -136,6 +142,8 @@ class LoginActivity : ComponentActivity() {
         
         val context = LocalContext.current
 
+        dbAuth = FirebaseAuth.getInstance()
+
         OutlinedTextField(
             value = email,
             onValueChange = {email = it},
@@ -170,7 +178,14 @@ class LoginActivity : ComponentActivity() {
                 if(email.isEmpty() || password.isEmpty()){
                     Toast.makeText(context, "Your account isn't valid", Toast.LENGTH_LONG).show()
                 }else{
-                    startActivity(Intent(this@LoginActivity, MainPageActivity::class.java))
+                    dbAuth.signInWithEmailAndPassword(email, password)
+                        .addOnCompleteListener{
+                            Toast.makeText(context, "Login Successful", Toast.LENGTH_LONG).show()
+                            startActivity(Intent(this@LoginActivity, MainPageActivity::class.java))
+                            finish()
+                        }.addOnFailureListener{
+                            Toast.makeText(context, it.toString(), Toast.LENGTH_LONG).show()
+                        }
                 }
             },
             content = { Text(

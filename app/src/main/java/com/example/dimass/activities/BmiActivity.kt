@@ -1,6 +1,9 @@
 package com.example.dimass.activities
 
+import android.content.Intent
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
@@ -13,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
@@ -37,15 +41,21 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.dimass.ui.theme.Blue
+import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.Green
 import com.example.dimass.ui.theme.LightGreen
 import com.example.dimass.ui.theme.Mustard
 import com.example.dimass.ui.theme.Red
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.FirebaseFirestore
 
 class BmiActivity : ComponentActivity() {
+    private lateinit var dbRef: DocumentReference
+    private lateinit var id: String
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -61,30 +71,31 @@ class BmiActivity : ComponentActivity() {
         val color: Color
         val category: String
         val program: String
+        var bmiFloat by remember{ mutableStateOf(0f) }
+        var bmi by remember{ mutableStateOf("") }
 
-        val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+        id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
 
-        val dbRef = FirebaseFirestore
+        dbRef = FirebaseFirestore
             .getInstance()
             .collection("accounts")
             .document(id)
 
-        var bmi by remember{ mutableStateOf(0f) }
-
         dbRef.get()
             .addOnSuccessListener {
-                bmi = it.data?.get("bmi") as Float
+                bmi = it.data?.get("bmi").toString()
+                bmiFloat = bmi.toFloat()
             }
 
-        if(bmi < 18.5){
+        if(bmiFloat < 18.5){
             category = "Underweight"
             color = Blue
             program = "Mass Gain"
-        }else if(bmi >= 18.5 && bmi < 25){
+        }else if(bmiFloat >= 18.5 && bmi.toFloat() < 25){
             category = "Normal"
             color = Green
             program = "Bebas"
-        }else if(bmi >= 25 && bmi < 30){
+        }else if(bmiFloat >= 25 && bmi.toFloat() < 30){
             category = "Overweight"
             color = Mustard
             program = "Diet"
@@ -100,7 +111,7 @@ class BmiActivity : ComponentActivity() {
                 .background(LightGreen),
             contentAlignment = Alignment.Center
         ){
-            BmiCard(category, color, bmi.toString(), program)
+            BmiCard(category, color, bmi, program)
         }
     }
 
@@ -112,7 +123,16 @@ class BmiActivity : ComponentActivity() {
         }
 
         var type by remember {
-            mutableStateOf(program)
+            mutableStateOf("")
+        }
+
+        var programRec by remember{
+            mutableStateOf("We recommend you to do a $program. But if you have another option, you can choose below")
+        }
+
+        if(program.lowercase() == "bebas"){
+            type = ""
+            programRec = "You can do Diet and Mass Gain. Choose one."
         }
 
         Column(
@@ -145,7 +165,7 @@ class BmiActivity : ComponentActivity() {
             }
 
             Text(
-                text = "We recommend you to do a $program",
+                text = programRec,
                 modifier = Modifier
                     .padding(0.dp, 10.dp)
             )
@@ -171,10 +191,20 @@ class BmiActivity : ComponentActivity() {
                 ){
                     DropdownMenuItem(
                         text = {
-                               Text(program)
+                               Text("Mass Gain")
                         },
                         onClick = {
                             type = "Mass Gain"
+                            isExpanded = false
+                        }
+                    )
+
+                    DropdownMenuItem(
+                        text = {
+                               Text("Diet")
+                        },
+                        onClick = {
+                            type = "Diet"
                             isExpanded = false
                         }
                     )
@@ -182,7 +212,25 @@ class BmiActivity : ComponentActivity() {
             }
 
             ElevatedButton(
-                onClick = {}
+                onClick = {
+                    dbRef.update(
+                        mapOf(
+                            "program" to type
+                        )
+                    )
+
+                    val intent = Intent(this@BmiActivity, MainPageActivity::class.java)
+                    startActivity(intent)
+                },
+                modifier = Modifier
+                    .padding(0.dp, 10.dp)
+                    .fillMaxWidth(0.6f),
+
+                colors = ButtonDefaults.elevatedButtonColors(
+                    containerColor = BottleGreen,
+                    contentColor = Color.White
+                ),
+
             ) {
                 Text(
                     text = "Next"
