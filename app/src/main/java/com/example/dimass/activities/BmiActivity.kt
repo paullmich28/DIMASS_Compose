@@ -94,7 +94,7 @@ class BmiActivity : ComponentActivity() {
         }else if(bmiFloat >= 18.5 && bmi.toFloat() < 25){
             category = "Normal"
             color = Green
-            program = "Bebas"
+            program = ""
         }else if(bmiFloat >= 25 && bmi.toFloat() < 30){
             category = "Overweight"
             color = Mustard
@@ -122,7 +122,7 @@ class BmiActivity : ComponentActivity() {
             mutableStateOf(false)
         }
 
-        var type by remember {
+        var typeOfProgram by remember {
             mutableStateOf("")
         }
 
@@ -130,9 +130,15 @@ class BmiActivity : ComponentActivity() {
             mutableStateOf("We recommend you to do a $program. But if you have another option, you can choose below")
         }
 
-        if(program.lowercase() == "bebas"){
-            type = ""
+        if(program.lowercase() == ""){
+            typeOfProgram = ""
             programRec = "You can do Diet and Mass Gain. Choose one."
+        }else if(program.lowercase() == "diet"){
+            typeOfProgram = "Diet"
+            programRec = "We recommend you to do a $typeOfProgram"
+        }else{
+            typeOfProgram = "Mass Gain"
+            programRec = "We recommend you to do a $typeOfProgram"
         }
 
         Column(
@@ -175,7 +181,7 @@ class BmiActivity : ComponentActivity() {
                 onExpandedChange = {isExpanded = it}
             ) {
                 TextField(
-                    value = type,
+                    value = typeOfProgram,
                     onValueChange = {},
                     readOnly = true,
                     trailingIcon = {
@@ -194,7 +200,7 @@ class BmiActivity : ComponentActivity() {
                                Text("Mass Gain")
                         },
                         onClick = {
-                            type = "Mass Gain"
+                            typeOfProgram = "Mass Gain"
                             isExpanded = false
                         }
                     )
@@ -204,7 +210,7 @@ class BmiActivity : ComponentActivity() {
                                Text("Diet")
                         },
                         onClick = {
-                            type = "Diet"
+                            typeOfProgram = "Diet"
                             isExpanded = false
                         }
                     )
@@ -215,7 +221,7 @@ class BmiActivity : ComponentActivity() {
                 onClick = {
                     dbRef.update(
                         mapOf(
-                            "program" to type
+                            "program" to typeOfProgram
                         )
                     )
 

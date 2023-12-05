@@ -55,33 +55,8 @@ class LoginActivity : ComponentActivity() {
         super.onStart()
 
         if(FirebaseAuth.getInstance().currentUser != null){
-            val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-            var weight: String
-            var height: String
-
-            var weightFloat = 0f
-            var heightFloat = 0f
-
-//            dbRef = FirebaseFirestore
-//                .getInstance()
-//                .collection("accounts")
-//                .document(id)
-//
-//            dbRef.get()
-//                .addOnSuccessListener {
-//                    weight = it.data?.get("weight").toString()
-//                    height = it.data?.get("height").toString()
-//                    weightFloat = weight.toFloat()
-//                    heightFloat = height.toFloat()
-//                }
-//
-//            if(weightFloat == 0f || heightFloat == 0f){
-//                val intent = Intent(this@LoginActivity, NewUserActivity::class.java)
-//                startActivity(intent)
-//            }else{
-//                val intent = Intent(this@LoginActivity, MainPageActivity::class.java)
-//                startActivity(intent)
-//            }
+            val intent = Intent(this@LoginActivity, MainPageActivity::class.java)
+            startActivity(intent)
         }
     }
 
