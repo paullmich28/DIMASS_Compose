@@ -15,6 +15,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -36,12 +40,51 @@ import com.google.firebase.firestore.FirebaseFirestore
 fun ProfileScreen(){
     val context = LocalContext.current
 
-//    val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-//
-//    var dbRef = FirebaseFirestore
-//        .getInstance()
-//        .collection("accounts")
-//        .document(id)
+    var fName by remember {
+        mutableStateOf("")
+    }
+
+    var lName by remember {
+        mutableStateOf("")
+    }
+
+    var weight by remember {
+        mutableStateOf("")
+    }
+
+    var weightFloat by remember {
+        mutableStateOf(0f)
+    }
+
+    var height by remember {
+        mutableStateOf("")
+    }
+
+    var heightFloat by remember {
+        mutableStateOf(0f)
+    }
+
+    var bmi by remember {
+        mutableStateOf("")
+    }
+
+    val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+    val dbRef = FirebaseFirestore
+        .getInstance()
+        .collection("accounts")
+        .document(id)
+
+    dbRef.get()
+        .addOnSuccessListener {
+            fName = it.data?.get("firstName").toString()
+            lName = it.data?.get("lastName").toString()
+            weight = it.data?.get("weight").toString()
+            height = it.data?.get("height").toString()
+            bmi = it.data?.get("bmi").toString()
+            weightFloat = weight.toFloat()
+            heightFloat = height.toFloat()
+        }
 
     Box(
         modifier = Modifier
@@ -62,7 +105,19 @@ fun ProfileScreen(){
             )
 
             Text(
-                text = "Nama"
+                text = "$fName $lName"
+            )
+
+            Text(
+                text = "Height: $height"
+            )
+
+            Text(
+                text = "Weight: $weight"
+            )
+
+            Text(
+                text = "BMI: $bmi"
             )
 
             ElevatedButton(

@@ -131,7 +131,6 @@ class BmiActivity : ComponentActivity() {
         }
 
         if(program.lowercase() == ""){
-            typeOfProgram = ""
             programRec = "You can do Diet and Mass Gain. Choose one."
         }else if(program.lowercase() == "diet"){
             typeOfProgram = "Diet"
