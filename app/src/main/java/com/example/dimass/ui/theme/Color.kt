@@ -6,6 +6,7 @@ val Purple80 = Color(0xFFD0BCFF)
 val PurpleGrey80 = Color(0xFFCCC2DC)
 val Pink80 = Color(0xFFEFB8C8)
 val LightGreen = Color(0xFFF5F5DC)
+val LighterGreen = Color(0xFF96C293)
 val BottleGreen = Color(0xFF004225)
 
 //BMI Card Colors
