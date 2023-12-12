@@ -15,6 +15,11 @@
         android:theme="@style/Theme.DIMASS"
         tools:targetApi="31">
         <activity
+            android:name=".activities.NewScheduleActivity"
+            android:exported="false"
+            android:label="New Schedule"
+            android:theme="@style/Theme.DIMASS" />
+        <activity
             android:name=".activities.BmiActivity"
             android:exported="false"
             android:label="@string/title_activity_bmi"

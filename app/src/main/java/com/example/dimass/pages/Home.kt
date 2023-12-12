@@ -1,6 +1,7 @@
 package com.example.dimass.pages
 
 import android.annotation.SuppressLint
+import android.content.Intent
 import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -37,6 +38,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.dimass.activities.NewScheduleActivity
 import com.example.dimass.ui.theme.Blue
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.Green
@@ -68,7 +70,10 @@ fun HomeScreen(){
     Scaffold(
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { /*TODO*/ },
+                onClick = {
+                    val intent = Intent(context, NewScheduleActivity::class.java)
+                    context.startActivity(intent)
+                },
                 modifier = Modifier.offset(0.dp, -(60.dp)),
                 containerColor = LighterGreen
             ) {
