@@ -34,14 +34,9 @@ import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.LightGreen
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 
 class NewUserActivity : ComponentActivity() {
-    override fun onStart() {
-        super.onStart()
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {

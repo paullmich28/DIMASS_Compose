@@ -1,8 +1,11 @@
 package com.example.dimass.activities
 
+import android.os.Build
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -33,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
@@ -43,8 +47,11 @@ import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.Green
 import com.example.dimass.ui.theme.LightGreen
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class NewScheduleActivity : ComponentActivity() {
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -54,12 +61,33 @@ class NewScheduleActivity : ComponentActivity() {
         }
     }
     
+    @RequiresApi(Build.VERSION_CODES.O)
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
     fun NewSchedulePage(){
         var scheduleName by remember {
             mutableStateOf("")
         }
+
+        val context = LocalContext.current
+        val date = LocalDate.now()
+        val dateInADay by remember {
+            mutableStateOf(
+                date.plusDays(1)
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+            )
+        }
+
+        val dateInAWeek by remember{
+            mutableStateOf(
+                date.plusDays(7)
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+            )
+        }
+
+        var startDate by remember{ mutableStateOf("") }
+        var endDate by remember{ mutableStateOf("") }
+
 
         val listProgram = listOf("Daily", "Weekly")
         var selectedOption by remember { mutableStateOf(0) }
@@ -106,7 +134,9 @@ class NewScheduleActivity : ComponentActivity() {
                 ){
                     listProgram.forEachIndexed {i, program ->
                         OutlinedButton(
-                            onClick = {selectedOption = i},
+                            onClick = {
+                                selectedOption = i
+                                      },
                             modifier = when(i){
                                 0 ->
                                     Modifier
@@ -162,20 +192,16 @@ class NewScheduleActivity : ComponentActivity() {
                                 text = program
                             )
                         }
-//                        RadioButton(
-//                            selected = selectedOption == program,
-//                            onClick = { selectedOption = program }
-//                        )
-//                        Text(
-//                            text = program,
-//                            modifier = Modifier.offset(y = 10.dp)
-//                        )
                     }
                 }
 
                 ElevatedButton(
                     onClick = {
-
+                        if(listProgram[selectedOption] == "Daily"){
+                            Toast.makeText(context, dateInADay, Toast.LENGTH_SHORT).show()
+                        }else{
+                            Toast.makeText(context, "$dateInADay - $dateInAWeek", Toast.LENGTH_SHORT).show()
+                        }
                     },
                     content = { Text(
                         "Submit",
@@ -193,6 +219,7 @@ class NewScheduleActivity : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @Composable
     @Preview
     fun NewSchedulePreview(){
