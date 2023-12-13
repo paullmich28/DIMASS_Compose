@@ -45,8 +45,12 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.dimass.api.daily.DailyModel
+import com.example.dimass.api.daily.MealDaily
+import com.example.dimass.api.daily.NutrientsDaily
 import com.example.dimass.api.service.ApiServiceDaily
 import com.example.dimass.api.service.ApiServiceWeekly
+import com.example.dimass.api.weekly.MealWeekly
+import com.example.dimass.api.weekly.NutrientsWeekly
 import com.example.dimass.api.weekly.WeeklyModel
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
@@ -103,19 +107,42 @@ class NewScheduleActivity : ComponentActivity() {
 
         val context = LocalContext.current
         val date = LocalDate.now()
-        val dateInADay by remember {
-            mutableStateOf(
-                date.plusDays(1)
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-            )
+
+        val dateInADay = date.plusDays(1)
+        val dateInAWeek = date.plusWeeks(7)
+
+//        val dateInADay by remember {
+//            mutableStateOf(
+//                date.plusDays(1)
+//                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+//            )
+//        }
+//
+//        val dateInAWeek by remember{
+//            mutableStateOf(
+//                date.plusDays(7)
+//                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+//            )
+//        }
+
+        var mealsListDaily: MutableList<MealDaily>
+
+        var mealsListWeekly = remember {
+            mutableListOf<MealWeekly>()
         }
 
-        val dateInAWeek by remember{
-            mutableStateOf(
-                date.plusDays(7)
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-            )
-        }
+        var startDate by remember{ mutableStateOf("") }
+        var endDate by remember{ mutableStateOf("") }
+
+        val listProgram = listOf("Daily", "Weekly")
+        var selectedOption by remember { mutableStateOf(0) }
+
+        var breakfast: MealDaily
+        var lunch: MealDaily
+        var dinner: MealDaily
+
+        var nutrientsDaily: NutrientsDaily
+        var nutrientsWeekly: NutrientsWeekly
 
 //        dbAuth = FirebaseAuth.getInstance()
 //        val id = dbAuth.currentUser?.uid ?: ""
@@ -123,9 +150,6 @@ class NewScheduleActivity : ComponentActivity() {
 //        dbRef = FirebaseFirestore.getInstance()
 //            .collection("accounts")
 //            .document(id)
-
-        var startDate by remember{ mutableStateOf("") }
-        var endDate by remember{ mutableStateOf("") }
 
 //        var weight by remember{ mutableStateOf("") }
 //        var height by remember{ mutableStateOf("") }
@@ -143,9 +167,6 @@ class NewScheduleActivity : ComponentActivity() {
 //                weightFloat = weight.toFloat()
 //                heightFloat = height.toFloat()
 //            }
-
-        val listProgram = listOf("Daily", "Weekly")
-        var selectedOption by remember { mutableStateOf(0) }
 
         Box(
             modifier = Modifier
@@ -252,7 +273,39 @@ class NewScheduleActivity : ComponentActivity() {
 
                 ElevatedButton(
                     onClick = {
-                        getPlanResponse(listProgram[selectedOption], context)
+                        if(listProgram[selectedOption] == "Daily"){
+                            val call = apiServiceDaily.getDailyData(apiKey, "day", null)
+                            call.enqueue(object: Callback<DailyModel>{
+                                override fun onResponse(call: Call<DailyModel>, response: Response<DailyModel>) {
+                                    if(response.isSuccessful){
+                                        val dataModel = response.body()
+                                        mealsListDaily = (dataModel?.meals)?.toMutableList() ?: mutableListOf()
+                                        breakfast = mealsListDaily[0]
+                                        lunch = mealsListDaily[1]
+                                        dinner = mealsListDaily[2]
+                                        nutrientsDaily = dataModel?.nutrients!!
+                                    }
+                                }
+
+                                override fun onFailure(call: Call<DailyModel>, t: Throwable) {
+
+                                }
+                            })
+                        }else{
+                            val call = apiServiceWeekly.getWeeklyData(apiKey, "week", null)
+                            call.enqueue(object: Callback<WeeklyModel>{
+                                override fun onResponse(call: Call<WeeklyModel>, response: Response<WeeklyModel>) {
+                                    if(response.isSuccessful){
+                                        val dataModel = response.body()?.week
+                                    }
+                                }
+
+                                override fun onFailure(call: Call<WeeklyModel>, t: Throwable) {
+
+                                }
+                            })
+                        }
+
                     },
                     content = { Text(
                         "Submit",
@@ -267,36 +320,6 @@ class NewScheduleActivity : ComponentActivity() {
                         .fillMaxWidth(0.6f)
                 )
             }
-        }
-    }
-
-    private fun getPlanResponse(program: String, context: Context){
-        if(program == "Daily"){
-            val call = apiServiceDaily.getDailyData(apiKey, "day", null)
-            call.enqueue(object: Callback<DailyModel>{
-                override fun onResponse(call: Call<DailyModel>, response: Response<DailyModel>) {
-                    val dataModel = response.body()
-                    val firstResponse = dataModel?.meals?.firstOrNull()?.title ?: "No Title"
-//                    Toast.makeText(context, firstResponse, Toast.LENGTH_SHORT).show()
-                }
-
-                override fun onFailure(call: Call<DailyModel>, t: Throwable) {
-                    TODO("Not yet implemented")
-                }
-            })
-        }else{
-            val call = apiServiceWeekly.getWeeklyData(apiKey, "week", null)
-            call.enqueue(object: Callback<WeeklyModel>{
-                override fun onResponse(call: Call<WeeklyModel>, response: Response<WeeklyModel>) {
-                    if(response.isSuccessful){
-                        val dataModel = response.body()
-                    }
-                }
-
-                override fun onFailure(call: Call<WeeklyModel>, t: Throwable) {
-                    TODO("Not yet implemented")
-                }
-            })
         }
     }
 
