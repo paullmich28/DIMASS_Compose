@@ -1,5 +1,6 @@
 package com.example.dimass.activities
 
+import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -43,14 +44,45 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
+import com.example.dimass.api.daily.DailyModel
+import com.example.dimass.api.service.ApiServiceDaily
+import com.example.dimass.api.service.ApiServiceWeekly
+import com.example.dimass.api.weekly.WeeklyModel
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.Green
 import com.example.dimass.ui.theme.LightGreen
+import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.FirebaseFirestore
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 class NewScheduleActivity : ComponentActivity() {
+    val apiKey = "04c0654db4c748b28d2a2ddffe4a2cd5"
+    private lateinit var dbRef: DocumentReference
+    private lateinit var dbAuth: FirebaseAuth
+
+    private val retrofit by lazy{
+        Retrofit.Builder()
+            .baseUrl("https://api.spoonacular.com/")
+            .addConverterFactory(MoshiConverterFactory.create())
+            .build()
+    }
+
+    private val apiServiceWeekly by lazy {
+        retrofit.create(ApiServiceWeekly::class.java)
+    }
+
+    private val apiServiceDaily by lazy{
+        retrofit.create(ApiServiceDaily::class.java)
+    }
+
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -85,9 +117,32 @@ class NewScheduleActivity : ComponentActivity() {
             )
         }
 
+//        dbAuth = FirebaseAuth.getInstance()
+//        val id = dbAuth.currentUser?.uid ?: ""
+//
+//        dbRef = FirebaseFirestore.getInstance()
+//            .collection("accounts")
+//            .document(id)
+
         var startDate by remember{ mutableStateOf("") }
         var endDate by remember{ mutableStateOf("") }
 
+//        var weight by remember{ mutableStateOf("") }
+//        var height by remember{ mutableStateOf("") }
+//        var dietOrMassgain by remember{ mutableStateOf("") }
+//
+//        var weightFloat by remember{ mutableStateOf(0f) }
+//        var heightFloat by remember{ mutableStateOf(0f) }
+//
+//        dbRef.get()
+//            .addOnSuccessListener {
+//                weight = it.data?.get("weight").toString()
+//                height = it.data?.get("height").toString()
+//                dietOrMassgain = it.data?.get("program").toString()
+//
+//                weightFloat = weight.toFloat()
+//                heightFloat = height.toFloat()
+//            }
 
         val listProgram = listOf("Daily", "Weekly")
         var selectedOption by remember { mutableStateOf(0) }
@@ -197,11 +252,7 @@ class NewScheduleActivity : ComponentActivity() {
 
                 ElevatedButton(
                     onClick = {
-                        if(listProgram[selectedOption] == "Daily"){
-                            Toast.makeText(context, dateInADay, Toast.LENGTH_SHORT).show()
-                        }else{
-                            Toast.makeText(context, "$dateInADay - $dateInAWeek", Toast.LENGTH_SHORT).show()
-                        }
+                        getPlanResponse(listProgram[selectedOption], context)
                     },
                     content = { Text(
                         "Submit",
@@ -216,6 +267,36 @@ class NewScheduleActivity : ComponentActivity() {
                         .fillMaxWidth(0.6f)
                 )
             }
+        }
+    }
+
+    private fun getPlanResponse(program: String, context: Context){
+        if(program == "Daily"){
+            val call = apiServiceDaily.getDailyData(apiKey, "day", null)
+            call.enqueue(object: Callback<DailyModel>{
+                override fun onResponse(call: Call<DailyModel>, response: Response<DailyModel>) {
+                    val dataModel = response.body()
+                    val firstResponse = dataModel?.meals?.firstOrNull()?.title ?: "No Title"
+//                    Toast.makeText(context, firstResponse, Toast.LENGTH_SHORT).show()
+                }
+
+                override fun onFailure(call: Call<DailyModel>, t: Throwable) {
+                    TODO("Not yet implemented")
+                }
+            })
+        }else{
+            val call = apiServiceWeekly.getWeeklyData(apiKey, "week", null)
+            call.enqueue(object: Callback<WeeklyModel>{
+                override fun onResponse(call: Call<WeeklyModel>, response: Response<WeeklyModel>) {
+                    if(response.isSuccessful){
+                        val dataModel = response.body()
+                    }
+                }
+
+                override fun onFailure(call: Call<WeeklyModel>, t: Throwable) {
+                    TODO("Not yet implemented")
+                }
+            })
         }
     }
 
