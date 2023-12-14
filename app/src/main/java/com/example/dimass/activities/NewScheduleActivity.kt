@@ -44,19 +44,14 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 import com.example.dimass.api.daily.DailyModel
-import com.example.dimass.api.daily.MealDaily
-import com.example.dimass.api.daily.NutrientsDaily
 import com.example.dimass.api.service.ApiServiceDaily
 import com.example.dimass.api.service.ApiServiceWeekly
-import com.example.dimass.api.weekly.MealWeekly
-import com.example.dimass.api.weekly.NutrientsWeekly
 import com.example.dimass.api.weekly.WeeklyModel
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.Green
 import com.example.dimass.ui.theme.LightGreen
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
 import retrofit2.Call
 import retrofit2.Callback
@@ -65,7 +60,6 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
-import java.time.temporal.ChronoUnit
 
 class NewScheduleActivity : ComponentActivity() {
     private val apiKey = "04c0654db4c748b28d2a2ddffe4a2cd5"
@@ -116,17 +110,6 @@ class NewScheduleActivity : ComponentActivity() {
 
         val listProgram = listOf("Daily", "Weekly")
         var selectedOption by remember { mutableStateOf(0) }
-
-//        var breakfastDaily: MealDaily
-//        var lunchDaily: MealDaily
-//        var dinnerDaily: MealDaily
-//
-//        var breakfastWeekly: List<MealWeekly>
-//        var lunchWeekly: List<MealWeekly>
-//        var dinnerWeekly: List<MealWeekly>
-//
-//        var nutrientsDaily: NutrientsDaily
-//        var nutrientsWeekly: NutrientsWeekly
 
         dbAuth = FirebaseAuth.getInstance()
         val id = dbAuth.currentUser?.uid ?: ""
@@ -319,64 +302,6 @@ class NewScheduleActivity : ComponentActivity() {
                                                 }.addOnFailureListener{
                                                     Toast.makeText(context, "Planning not stored", Toast.LENGTH_LONG).show()
                                                 }
-
-//                                            var iterations = 0
-//
-//                                            while(!dateInADay.isAfter(dateInAWeek)){
-//                                                startDate = dateInADay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-//                                                endDate = dateInAWeek.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-//
-//                                                when(iterations){
-//                                                    0 -> {
-//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
-//                                                        nutrientsWeekly = monday?.nutrients!!
-//                                                    }
-//
-//                                                    1 -> {
-//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
-//                                                        nutrientsWeekly = tuesday?.nutrients!!
-//                                                    }
-//
-//                                                    2 -> {
-//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
-//                                                        nutrientsWeekly = wednesday?.nutrients!!
-//                                                    }
-//
-//                                                    3 -> {
-//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
-//                                                        nutrientsWeekly = thursday?.nutrients!!
-//                                                    }
-//
-//                                                    4 -> {
-//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
-//                                                        nutrientsWeekly = friday?.nutrients!!
-//                                                    }
-//
-//                                                    5 -> {
-//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
-//                                                        nutrientsWeekly = saturday?.nutrients!!
-//                                                    }
-//
-//                                                    else -> {
-//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
-//                                                        nutrientsWeekly = sunday?.nutrients!!
-//                                                    }
-//                                                }
-//
-//                                                val hashMap = hashMapOf(
-//                                                    "uid" to id,
-//                                                    "name" to scheduleName,
-//                                                    "startDate" to startDate,
-//                                                    "endDate" to endDate,
-//                                                    "planning" to mealsListWeekly,
-//                                                    "nutrients" to nutrientsWeekly
-//                                                )
-//
-//                                                dateInADay = dateInADay.plusDays(1)
-//                                                mealsListWeekly.clear()
-//
-//                                                iterations++
-//                                            }
                                         }
                                     }
 
