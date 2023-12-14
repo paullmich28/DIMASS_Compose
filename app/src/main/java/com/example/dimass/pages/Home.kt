@@ -49,6 +49,8 @@ fun HomeScreen(){
     val name = remember{ mutableListOf<String>() }
     val startDate = remember{ mutableListOf<String>() }
     val endDate = remember{ mutableListOf<String>() }
+//    val foodName = remember{ mutableListOf<String>() }
+
     val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     val context = LocalContext.current
     val dbRef = FirebaseFirestore
@@ -63,6 +65,13 @@ fun HomeScreen(){
                 val nameData = doc.data["name"].toString()
                 val startDateData = doc.data["startDate"].toString()
                 val endDateData = doc.data["endDate"].toString()
+
+//                val planningArray = doc.get("planning") as? Map<String, Any>
+//                val meals = planningArray?.get("meals") as? List<Map<String, Any>>
+//
+//                meals?.forEach{map ->
+//                    foodName.add(map["title"].toString())
+//                }
 
                 name.add(nameData)
                 startDate.add(startDateData)
@@ -139,7 +148,6 @@ fun HomeScreen(){
                                 }
                             }
                         }
-
                     }
                 }
             }

@@ -66,9 +66,10 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.time.temporal.ChronoUnit
 
 class NewScheduleActivity : ComponentActivity() {
-    val apiKey = "04c0654db4c748b28d2a2ddffe4a2cd5"
+    private val apiKey = "04c0654db4c748b28d2a2ddffe4a2cd5"
     private lateinit var dbRef: FirebaseFirestore
     private lateinit var dbAuth: FirebaseAuth
 
@@ -108,28 +109,8 @@ class NewScheduleActivity : ComponentActivity() {
         val context = LocalContext.current
         val date = LocalDate.now()
 
-        val dateInADay = date.plusDays(1)
-        val dateInAWeek = date.plusWeeks(7)
-
-        val dateInADayString by remember {
-            mutableStateOf(
-                dateInADay
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-            )
-        }
-
-        val dateInAWeekString by remember{
-            mutableStateOf(
-                dateInAWeek
-                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-            )
-        }
-
-        var mealsListDaily: MutableList<MealDaily>
-
-        var mealsListWeekly = remember {
-            mutableListOf<MealWeekly>()
-        }
+        var dateInADay = date.plusDays(1)
+        val dateInAWeek = date.plusDays(7)
 
         var startDate by remember{ mutableStateOf("") }
         var endDate by remember{ mutableStateOf("") }
@@ -137,16 +118,16 @@ class NewScheduleActivity : ComponentActivity() {
         val listProgram = listOf("Daily", "Weekly")
         var selectedOption by remember { mutableStateOf(0) }
 
-        var breakfastDaily: MealDaily
-        var lunchDaily: MealDaily
-        var dinnerDaily: MealDaily
-
-        var breakfastWeekly: List<MealWeekly>
-        var lunchWeekly: List<MealWeekly>
-        var dinnerWeekly: List<MealWeekly>
-
-        var nutrientsDaily: NutrientsDaily
-        var nutrientsWeekly: NutrientsWeekly
+//        var breakfastDaily: MealDaily
+//        var lunchDaily: MealDaily
+//        var dinnerDaily: MealDaily
+//
+//        var breakfastWeekly: List<MealWeekly>
+//        var lunchWeekly: List<MealWeekly>
+//        var dinnerWeekly: List<MealWeekly>
+//
+//        var nutrientsDaily: NutrientsDaily
+//        var nutrientsWeekly: NutrientsWeekly
 
         dbAuth = FirebaseAuth.getInstance()
         val id = dbAuth.currentUser?.uid ?: ""
@@ -288,17 +269,15 @@ class NewScheduleActivity : ComponentActivity() {
                                     override fun onResponse(call: Call<DailyModel>, response: Response<DailyModel>) {
                                         if(response.isSuccessful){
                                             val dataModel = response.body()
-                                            mealsListDaily = (dataModel?.meals)?.toMutableList() ?: mutableListOf()
-                                            nutrientsDaily = dataModel?.nutrients!!
-                                            startDate = dateInADayString
-                                            endDate = dateInADayString
+                                            startDate = dateInADay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                            endDate = dateInADay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
 
                                             val hashMap = hashMapOf(
                                                 "uid" to id,
                                                 "name" to scheduleName,
                                                 "startDate" to startDate,
                                                 "endDate" to endDate,
-                                                "planning" to mealsListDaily
+                                                "planning" to dataModel
                                             )
 
                                             dbRef.collection("scheduling")
@@ -322,6 +301,83 @@ class NewScheduleActivity : ComponentActivity() {
                                     override fun onResponse(call: Call<WeeklyModel>, response: Response<WeeklyModel>) {
                                         if(response.isSuccessful){
                                             val dataModel = response.body()?.week
+                                            startDate = dateInADay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                            endDate = dateInAWeek.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+
+                                            val hashMap = hashMapOf(
+                                                "uid" to id,
+                                                "name" to scheduleName,
+                                                "startDate" to startDate,
+                                                "endDate" to endDate,
+                                                "planning" to dataModel
+                                            )
+
+                                            dbRef.collection("scheduling")
+                                                .document()
+                                                .set(hashMap)
+                                                .addOnSuccessListener {
+                                                    Toast.makeText(context, "Planning Stored Successfully", Toast.LENGTH_LONG).show()
+                                                }.addOnFailureListener{
+                                                    Toast.makeText(context, "Planning not stored", Toast.LENGTH_LONG).show()
+                                                }
+
+//                                            var iterations = 0
+//
+//                                            while(!dateInADay.isAfter(dateInAWeek)){
+//                                                startDate = dateInADay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+//                                                endDate = dateInAWeek.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+//
+//                                                when(iterations){
+//                                                    0 -> {
+//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
+//                                                        nutrientsWeekly = monday?.nutrients!!
+//                                                    }
+//
+//                                                    1 -> {
+//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
+//                                                        nutrientsWeekly = tuesday?.nutrients!!
+//                                                    }
+//
+//                                                    2 -> {
+//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
+//                                                        nutrientsWeekly = wednesday?.nutrients!!
+//                                                    }
+//
+//                                                    3 -> {
+//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
+//                                                        nutrientsWeekly = thursday?.nutrients!!
+//                                                    }
+//
+//                                                    4 -> {
+//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
+//                                                        nutrientsWeekly = friday?.nutrients!!
+//                                                    }
+//
+//                                                    5 -> {
+//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
+//                                                        nutrientsWeekly = saturday?.nutrients!!
+//                                                    }
+//
+//                                                    else -> {
+//                                                        mealsListWeekly = (monday?.meals)?.toMutableList() ?: mutableListOf()
+//                                                        nutrientsWeekly = sunday?.nutrients!!
+//                                                    }
+//                                                }
+//
+//                                                val hashMap = hashMapOf(
+//                                                    "uid" to id,
+//                                                    "name" to scheduleName,
+//                                                    "startDate" to startDate,
+//                                                    "endDate" to endDate,
+//                                                    "planning" to mealsListWeekly,
+//                                                    "nutrients" to nutrientsWeekly
+//                                                )
+//
+//                                                dateInADay = dateInADay.plusDays(1)
+//                                                mealsListWeekly.clear()
+//
+//                                                iterations++
+//                                            }
                                         }
                                     }
 
