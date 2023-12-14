@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -45,16 +46,28 @@ import com.google.firebase.firestore.FirebaseFirestore
 @Composable
 fun HomeScreen(){
     var itemSize by remember { mutableStateOf(0) }
+    val name = remember{ mutableListOf<String>() }
+    val startDate = remember{ mutableListOf<String>() }
+    val endDate = remember{ mutableListOf<String>() }
     val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
     val context = LocalContext.current
     val dbRef = FirebaseFirestore
         .getInstance()
         .collection("scheduling")
-        .whereEqualTo("id", id)
+        .whereEqualTo("uid", id)
 
     dbRef.get()
         .addOnSuccessListener {
             itemSize = it.size()
+            for (doc in it){
+                val nameData = doc.data["name"].toString()
+                val startDateData = doc.data["startDate"].toString()
+                val endDateData = doc.data["endDate"].toString()
+
+                name.add(nameData)
+                startDate.add(startDateData)
+                endDate.add(endDateData)
+            }
         }
 
     Scaffold(
@@ -94,34 +107,39 @@ fun HomeScreen(){
                             "There's no diet scheduling yet."
                         )
                     }else{
-                        Card(
-                            shape = RoundedCornerShape(10.dp),
-                            colors = CardDefaults.cardColors(
-                                containerColor = Green
-                            ),
-                            modifier = Modifier.padding(20.dp)
-                        ) {
-                            Column(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(20.dp),
-                                verticalArrangement = Arrangement.Top,
-                                horizontalAlignment = Alignment.Start
-                            ) {
-                                Text(
-                                    text = "Penjadwalan 1",
-                                    fontSize = 20.sp
-                                )
-                                Text(
-                                    text = "Start Date: 06/12/2023",
-                                    modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp)
-                                )
+                        LazyColumn{
+                            items(count = itemSize){item ->
+                                Card(
+                                    shape = RoundedCornerShape(10.dp),
+                                    colors = CardDefaults.cardColors(
+                                        containerColor = Green
+                                    ),
+                                    modifier = Modifier.padding(20.dp)
+                                ) {
+                                    Column(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(20.dp),
+                                        verticalArrangement = Arrangement.Top,
+                                        horizontalAlignment = Alignment.Start
+                                    ) {
+                                        Text(
+                                            text = name[item],
+                                            fontSize = 20.sp
+                                        )
+                                        Text(
+                                            text = "Start Date: ${startDate[item]}",
+                                            modifier = Modifier.padding(0.dp, 20.dp, 0.dp, 0.dp)
+                                        )
 
-                                Text(
-                                    text = "End Date: 12/12/2023"
-                                )
+                                        Text(
+                                            text = "End Date: ${endDate[item]}"
+                                        )
+                                    }
+                                }
                             }
                         }
+
                     }
                 }
             }

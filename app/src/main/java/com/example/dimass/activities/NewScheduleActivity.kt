@@ -69,7 +69,7 @@ import java.time.format.DateTimeFormatter
 
 class NewScheduleActivity : ComponentActivity() {
     val apiKey = "04c0654db4c748b28d2a2ddffe4a2cd5"
-    private lateinit var dbRef: DocumentReference
+    private lateinit var dbRef: FirebaseFirestore
     private lateinit var dbAuth: FirebaseAuth
 
     private val retrofit by lazy{
@@ -111,19 +111,19 @@ class NewScheduleActivity : ComponentActivity() {
         val dateInADay = date.plusDays(1)
         val dateInAWeek = date.plusWeeks(7)
 
-//        val dateInADay by remember {
-//            mutableStateOf(
-//                date.plusDays(1)
-//                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-//            )
-//        }
-//
-//        val dateInAWeek by remember{
-//            mutableStateOf(
-//                date.plusDays(7)
-//                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-//            )
-//        }
+        val dateInADayString by remember {
+            mutableStateOf(
+                dateInADay
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+            )
+        }
+
+        val dateInAWeekString by remember{
+            mutableStateOf(
+                dateInAWeek
+                    .format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+            )
+        }
 
         var mealsListDaily: MutableList<MealDaily>
 
@@ -137,15 +137,21 @@ class NewScheduleActivity : ComponentActivity() {
         val listProgram = listOf("Daily", "Weekly")
         var selectedOption by remember { mutableStateOf(0) }
 
-        var breakfast: MealDaily
-        var lunch: MealDaily
-        var dinner: MealDaily
+        var breakfastDaily: MealDaily
+        var lunchDaily: MealDaily
+        var dinnerDaily: MealDaily
+
+        var breakfastWeekly: List<MealWeekly>
+        var lunchWeekly: List<MealWeekly>
+        var dinnerWeekly: List<MealWeekly>
 
         var nutrientsDaily: NutrientsDaily
         var nutrientsWeekly: NutrientsWeekly
 
-//        dbAuth = FirebaseAuth.getInstance()
-//        val id = dbAuth.currentUser?.uid ?: ""
+        dbAuth = FirebaseAuth.getInstance()
+        val id = dbAuth.currentUser?.uid ?: ""
+
+        dbRef = FirebaseFirestore.getInstance()
 //
 //        dbRef = FirebaseFirestore.getInstance()
 //            .collection("accounts")
@@ -273,37 +279,57 @@ class NewScheduleActivity : ComponentActivity() {
 
                 ElevatedButton(
                     onClick = {
-                        if(listProgram[selectedOption] == "Daily"){
-                            val call = apiServiceDaily.getDailyData(apiKey, "day", null)
-                            call.enqueue(object: Callback<DailyModel>{
-                                override fun onResponse(call: Call<DailyModel>, response: Response<DailyModel>) {
-                                    if(response.isSuccessful){
-                                        val dataModel = response.body()
-                                        mealsListDaily = (dataModel?.meals)?.toMutableList() ?: mutableListOf()
-                                        breakfast = mealsListDaily[0]
-                                        lunch = mealsListDaily[1]
-                                        dinner = mealsListDaily[2]
-                                        nutrientsDaily = dataModel?.nutrients!!
-                                    }
-                                }
-
-                                override fun onFailure(call: Call<DailyModel>, t: Throwable) {
-
-                                }
-                            })
+                        if(scheduleName.isEmpty()){
+                            Toast.makeText(context, "Please fill the schedule name", Toast.LENGTH_SHORT).show()
                         }else{
-                            val call = apiServiceWeekly.getWeeklyData(apiKey, "week", null)
-                            call.enqueue(object: Callback<WeeklyModel>{
-                                override fun onResponse(call: Call<WeeklyModel>, response: Response<WeeklyModel>) {
-                                    if(response.isSuccessful){
-                                        val dataModel = response.body()?.week
+                            if(listProgram[selectedOption] == "Daily"){
+                                val call = apiServiceDaily.getDailyData(apiKey, "day", null)
+                                call.enqueue(object: Callback<DailyModel>{
+                                    override fun onResponse(call: Call<DailyModel>, response: Response<DailyModel>) {
+                                        if(response.isSuccessful){
+                                            val dataModel = response.body()
+                                            mealsListDaily = (dataModel?.meals)?.toMutableList() ?: mutableListOf()
+                                            nutrientsDaily = dataModel?.nutrients!!
+                                            startDate = dateInADayString
+                                            endDate = dateInADayString
+
+                                            val hashMap = hashMapOf(
+                                                "uid" to id,
+                                                "name" to scheduleName,
+                                                "startDate" to startDate,
+                                                "endDate" to endDate,
+                                                "planning" to mealsListDaily
+                                            )
+
+                                            dbRef.collection("scheduling")
+                                                .document()
+                                                .set(hashMap)
+                                                .addOnSuccessListener {
+                                                    Toast.makeText(context, "Planning Stored Successfully", Toast.LENGTH_LONG).show()
+                                                }.addOnFailureListener{
+                                                    Toast.makeText(context, "Planning not stored", Toast.LENGTH_LONG).show()
+                                                }
+                                        }
                                     }
-                                }
 
-                                override fun onFailure(call: Call<WeeklyModel>, t: Throwable) {
+                                    override fun onFailure(call: Call<DailyModel>, t: Throwable) {
 
-                                }
-                            })
+                                    }
+                                })
+                            }else{
+                                val call = apiServiceWeekly.getWeeklyData(apiKey, "week", null)
+                                call.enqueue(object: Callback<WeeklyModel>{
+                                    override fun onResponse(call: Call<WeeklyModel>, response: Response<WeeklyModel>) {
+                                        if(response.isSuccessful){
+                                            val dataModel = response.body()?.week
+                                        }
+                                    }
+
+                                    override fun onFailure(call: Call<WeeklyModel>, t: Throwable) {
+
+                                    }
+                                })
+                            }
                         }
 
                     },
