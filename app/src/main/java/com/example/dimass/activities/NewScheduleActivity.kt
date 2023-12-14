@@ -1,6 +1,5 @@
 package com.example.dimass.activities
 
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
