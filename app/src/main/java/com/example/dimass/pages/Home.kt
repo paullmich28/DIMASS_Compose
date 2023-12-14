@@ -58,13 +58,22 @@ fun HomeScreen(){
         .collection("scheduling")
         .whereEqualTo("uid", id)
 
-    dbRef.get()
-        .addOnSuccessListener {
-            itemSize = it.size()
-            for (doc in it){
-                val nameData = doc.data["name"].toString()
-                val startDateData = doc.data["startDate"].toString()
-                val endDateData = doc.data["endDate"].toString()
+    dbRef
+        .get()
+        .addOnSuccessListener {docs ->
+            itemSize = docs.size()
+
+//            val planning = docs.documents[1].get("planning") as? Map<String, Any>
+//            val friday = planning?.get("friday") as? Map<String, Any>
+//            val meals = friday?.get("meals") as? List<Map<String, Any>>
+//
+//            foodName.add(meals?.get(0)?.get("title").toString())
+//            foodName.add(meals?.get(1)?.get("title").toString())
+
+            for (doc in docs){
+                val nameData = doc.getString("name")!!
+                val startDateData = doc.getString("startDate")!!
+                val endDateData = doc.getString("endDate")!!
 
 //                val planningArray = doc.get("planning") as? Map<String, Any>
 //                val meals = planningArray?.get("meals") as? List<Map<String, Any>>

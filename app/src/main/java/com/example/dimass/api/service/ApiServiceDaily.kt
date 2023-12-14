@@ -10,6 +10,7 @@ interface ApiServiceDaily {
     fun getDailyData(
         @Query("apiKey") apiKey : String,
         @Query("timeFrame") timeFrame : String,
-        @Query("targetCalories") targetCalories : Int?
+        @Query("targetCalories") targetCalories : Int?,
+        @Query("diet") diet : String?
     ) : Call<DailyModel>
 }

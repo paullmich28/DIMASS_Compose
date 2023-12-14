@@ -1,5 +1,6 @@
 package com.example.dimass.activities
 
+import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.widget.Toast
@@ -22,12 +23,16 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -99,8 +104,27 @@ class NewScheduleActivity : ComponentActivity() {
             mutableStateOf("")
         }
 
+        var isExpanded by remember {
+            mutableStateOf(false)
+        }
+
         val context = LocalContext.current
         val date = LocalDate.now()
+        val foodPrograms =
+            listOf(
+                "Anything",
+                "Gluten Free",
+                "Ketogenic",
+                "Vegetarian",
+                "Lacto-Vegetarian",
+                "Ovo-Vegetarian",
+                "Vegan",
+                "Pescetarian",
+                "Paleo",
+                "Primal"
+            )
+
+        var typeOfFood by remember { mutableStateOf(foodPrograms[0]) }
 
         var dateInADay = date.plusDays(1)
         val dateInAWeek = date.plusDays(7)
@@ -115,27 +139,15 @@ class NewScheduleActivity : ComponentActivity() {
         val id = dbAuth.currentUser?.uid ?: ""
 
         dbRef = FirebaseFirestore.getInstance()
-//
-//        dbRef = FirebaseFirestore.getInstance()
-//            .collection("accounts")
-//            .document(id)
 
-//        var weight by remember{ mutableStateOf("") }
-//        var height by remember{ mutableStateOf("") }
-//        var dietOrMassgain by remember{ mutableStateOf("") }
-//
-//        var weightFloat by remember{ mutableStateOf(0f) }
-//        var heightFloat by remember{ mutableStateOf(0f) }
-//
-//        dbRef.get()
-//            .addOnSuccessListener {
-//                weight = it.data?.get("weight").toString()
-//                height = it.data?.get("height").toString()
-//                dietOrMassgain = it.data?.get("program").toString()
-//
-//                weightFloat = weight.toFloat()
-//                heightFloat = height.toFloat()
-//            }
+        val getAcc = dbRef.collection("accounts").document(id)
+
+        var dietOrMassgain by remember{ mutableStateOf("") }
+
+        getAcc.get()
+            .addOnSuccessListener {doc ->
+                dietOrMassgain = doc.getString("program")!!
+            }
 
         Box(
             modifier = Modifier
@@ -240,16 +252,62 @@ class NewScheduleActivity : ComponentActivity() {
                     }
                 }
 
+                Text(
+                    text = "Choose your food type",
+                    modifier = Modifier.padding(top = 20.dp, bottom = 5.dp)
+                )
+
+                ExposedDropdownMenuBox(
+                    expanded = isExpanded,
+                    onExpandedChange = {isExpanded = it}
+                ) {
+                    OutlinedTextField(
+                        value = typeOfFood,
+                        onValueChange = {},
+                        readOnly = true,
+                        trailingIcon = {
+                            ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
+                        },
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        modifier = Modifier.menuAnchor()
+                    )
+
+                    ExposedDropdownMenu(
+                        expanded = isExpanded,
+                        onDismissRequest = {isExpanded = false}
+                    ){
+                        foodPrograms.forEach {type ->
+                            DropdownMenuItem(
+                                text = {
+                                    Text(
+                                        type
+                                    )
+                                },
+                                onClick = {
+                                    typeOfFood = type
+                                    isExpanded = false
+                                }
+                            )
+                        }
+                    }
+                }
+
                 ElevatedButton(
                     onClick = {
                         if(scheduleName.isEmpty()){
                             Toast.makeText(context, "Please fill the schedule name", Toast.LENGTH_SHORT).show()
                         }else{
                             if(listProgram[selectedOption] == "Daily"){
-                                val call = apiServiceDaily.getDailyData(apiKey, "day", null)
+                                val call = if(typeOfFood == "Anything"){
+                                    apiServiceDaily.getDailyData(apiKey, "day", null, null)
+                                }else{
+                                    apiServiceDaily.getDailyData(apiKey, "day", null, typeOfFood.lowercase())
+                                }
+
                                 call.enqueue(object: Callback<DailyModel>{
                                     override fun onResponse(call: Call<DailyModel>, response: Response<DailyModel>) {
                                         if(response.isSuccessful){
+                                            var docId: String
                                             val dataModel = response.body()
                                             startDate = dateInADay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                                             endDate = dateInADay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
@@ -259,14 +317,24 @@ class NewScheduleActivity : ComponentActivity() {
                                                 "name" to scheduleName,
                                                 "startDate" to startDate,
                                                 "endDate" to endDate,
-                                                "planning" to dataModel
+                                                "planning" to dataModel,
+                                                "program" to listProgram[selectedOption]
                                             )
 
                                             dbRef.collection("scheduling")
-                                                .document()
-                                                .set(hashMap)
-                                                .addOnSuccessListener {
+                                                .add(hashMap)
+                                                .addOnSuccessListener {doc ->
+                                                    docId = doc.id
                                                     Toast.makeText(context, "Planning Stored Successfully", Toast.LENGTH_LONG).show()
+
+                                                    val intent = Intent(this@NewScheduleActivity, ScheduleDetailActivity::class.java)
+                                                    val bundle = Bundle()
+
+                                                    bundle.putString("documentId", docId)
+                                                    intent.putExtras(bundle)
+
+                                                    startActivity(intent)
+                                                    finish()
                                                 }.addOnFailureListener{
                                                     Toast.makeText(context, "Planning not stored", Toast.LENGTH_LONG).show()
                                                 }
@@ -278,10 +346,15 @@ class NewScheduleActivity : ComponentActivity() {
                                     }
                                 })
                             }else{
-                                val call = apiServiceWeekly.getWeeklyData(apiKey, "week", null)
+                                val call = if(typeOfFood == "Anything"){
+                                    apiServiceWeekly.getWeeklyData(apiKey, "day", null, null)
+                                }else{
+                                    apiServiceWeekly.getWeeklyData(apiKey, "day", null, typeOfFood.lowercase())
+                                }
                                 call.enqueue(object: Callback<WeeklyModel>{
                                     override fun onResponse(call: Call<WeeklyModel>, response: Response<WeeklyModel>) {
                                         if(response.isSuccessful){
+                                            var docId: String
                                             val dataModel = response.body()?.week
                                             startDate = dateInADay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
                                             endDate = dateInAWeek.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
@@ -291,14 +364,24 @@ class NewScheduleActivity : ComponentActivity() {
                                                 "name" to scheduleName,
                                                 "startDate" to startDate,
                                                 "endDate" to endDate,
-                                                "planning" to dataModel
+                                                "planning" to dataModel,
+                                                "program" to listProgram[selectedOption]
                                             )
 
                                             dbRef.collection("scheduling")
-                                                .document()
-                                                .set(hashMap)
-                                                .addOnSuccessListener {
+                                                .add(hashMap)
+                                                .addOnSuccessListener {doc ->
+                                                    docId = doc.id
                                                     Toast.makeText(context, "Planning Stored Successfully", Toast.LENGTH_LONG).show()
+
+                                                    val intent = Intent(this@NewScheduleActivity, ScheduleDetailActivity::class.java)
+                                                    val bundle = Bundle()
+
+                                                    bundle.putString("documentId", docId)
+                                                    intent.putExtras(bundle)
+
+                                                    startActivity(intent)
+                                                    finish()
                                                 }.addOnFailureListener{
                                                     Toast.makeText(context, "Planning not stored", Toast.LENGTH_LONG).show()
                                                 }
@@ -311,7 +394,6 @@ class NewScheduleActivity : ComponentActivity() {
                                 })
                             }
                         }
-
                     },
                     content = { Text(
                         "Submit",

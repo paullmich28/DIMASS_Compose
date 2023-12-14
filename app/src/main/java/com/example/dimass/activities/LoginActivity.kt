@@ -27,6 +27,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -57,6 +58,7 @@ class LoginActivity : ComponentActivity() {
         if(FirebaseAuth.getInstance().currentUser != null){
             val intent = Intent(this@LoginActivity, MainPageActivity::class.java)
             startActivity(intent)
+            finish()
         }
     }
 
@@ -77,12 +79,12 @@ class LoginActivity : ComponentActivity() {
                 .fillMaxSize()
                 .background(LightGreen),
             contentAlignment = Alignment.TopCenter
-        ){
+        ) {
             Column(
                 Modifier.fillMaxHeight(),
                 verticalArrangement = Arrangement.SpaceBetween
-            ){
-                Column{
+            ) {
+                Column {
                     LogoSignIn()
                     FormSignIn()
                 }
@@ -91,12 +93,13 @@ class LoginActivity : ComponentActivity() {
                     modifier = Modifier
                         .weight(1f, false)
                         .padding(0.dp, 20.dp)
-                ){
+                ) {
                     SignUpOption()
                 }
             }
         }
     }
+
 
     @Composable
     fun LogoSignIn(){
