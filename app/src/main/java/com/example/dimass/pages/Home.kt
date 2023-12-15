@@ -2,13 +2,17 @@ package com.example.dimass.pages
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Bundle
 import android.util.Log
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -36,6 +40,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.dimass.activities.NewScheduleActivity
+import com.example.dimass.activities.ScheduleDetailActivity
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.Green
@@ -57,6 +62,7 @@ fun HomeScreen(){
     val name = remember{ mutableListOf<String>() }
     val startDate = remember{ mutableListOf<String>() }
     val endDate = remember{ mutableListOf<String>() }
+    var listOfScheduleId = remember{ mutableListOf<String>() }
 
     var userProgram by remember{ mutableStateOf("") }
 //    val foodName = remember{ mutableListOf<String>() }
@@ -77,14 +83,15 @@ fun HomeScreen(){
                 val docs = scheduling.get().await()
                 itemSize = docs.size()
 
-                docs.map {
-                    val nameData = it.getString("name")!!
-                    val startDateData = it.getString("startDate")!!
-                    val endDateData = it.getString("endDate")!!
+                docs.map {doc ->
+                    val nameData = doc.getString("name")!!
+                    val startDateData = doc.getString("startDate")!!
+                    val endDateData = doc.getString("endDate")!!
 
                     name.add(nameData)
                     startDate.add(startDateData)
                     endDate.add(endDateData)
+                    listOfScheduleId.add(doc.id)
                 }
             } catch (e: Exception) {
                 Log.e("exception", "Error", e)
@@ -96,37 +103,6 @@ fun HomeScreen(){
             } catch (e: Exception) {
                 ""
             }
-
-//            val planning = docs.documents[1].get("planning") as? Map<String, Any>
-//            val friday = planning?.get("friday") as? Map<String, Any>
-//            val meals = friday?.get("meals") as? List<Map<String, Any>>
-//
-//            foodName.add(meals?.get(0)?.get("title").toString())
-//            foodName.add(meals?.get(1)?.get("title").toString())
-//
-//                    for (doc in docs){
-//                        val nameData = doc.getString("name")!!
-//                        val startDateData = doc.getString("startDate")!!
-//                        val endDateData = doc.getString("endDate")!!
-//
-//                val planningArray = doc.get("planning") as? Map<String, Any>
-//                val meals = planningArray?.get("meals") as? List<Map<String, Any>>
-//
-//                meals?.forEach{map ->
-//                    foodName.add(map["title"].toString())
-//                }
-//
-//                        name.add(nameData)
-//                        startDate.add(startDateData)
-//                        endDate.add(endDateData)
-//                    }
-//                }
-
-//            accounts
-//                .get()
-//                .addOnSuccessListener {doc ->
-//                    userProgram = doc.getString("program")!!
-//                }
 
             isLoading = false
         }catch (e: Exception){
@@ -177,14 +153,26 @@ fun HomeScreen(){
                                 "There's no diet scheduling yet."
                             )
                         }else{
-                            LazyColumn{
+                            LazyColumn(
+                                modifier = Modifier.padding(bottom = 30.dp)
+                            ){
                                 items(count = itemSize){item ->
                                     Card(
                                         shape = RoundedCornerShape(10.dp),
                                         colors = CardDefaults.cardColors(
                                             containerColor = Green
                                         ),
-                                        modifier = Modifier.padding(20.dp)
+                                        modifier = Modifier.padding(20.dp),
+                                        onClick = {
+                                            val intent = Intent(context, ScheduleDetailActivity::class.java)
+                                            val bundle = Bundle()
+
+                                            bundle.putString("id", listOfScheduleId[item])
+
+                                            intent.putExtras(bundle)
+
+                                            context.startActivity(intent)
+                                        }
                                     ) {
                                         Column(
                                             modifier = Modifier

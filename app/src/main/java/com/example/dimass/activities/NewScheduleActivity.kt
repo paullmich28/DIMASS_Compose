@@ -330,7 +330,7 @@ class NewScheduleActivity : ComponentActivity() {
                                                     val intent = Intent(this@NewScheduleActivity, ScheduleDetailActivity::class.java)
                                                     val bundle = Bundle()
 
-                                                    bundle.putString("documentId", docId)
+                                                    bundle.putString("id", docId)
                                                     intent.putExtras(bundle)
 
                                                     startActivity(intent)

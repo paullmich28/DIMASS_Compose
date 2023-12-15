@@ -1,5 +1,6 @@
 package com.example.dimass.activities
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -49,6 +50,11 @@ import com.example.dimass.ui.theme.Green
 import com.example.dimass.ui.theme.LightGreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class ScheduleDetailActivity : ComponentActivity() {
     private lateinit var dbRef: FirebaseFirestore
@@ -63,19 +69,70 @@ class ScheduleDetailActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("CoroutineCreationDuringComposition")
+    @OptIn(DelicateCoroutinesApi::class)
     @Composable
     fun ScheduleDetailPage(){
         var isLoading by remember { mutableStateOf(true) }
         var itemSize by remember{ mutableStateOf(0) }
 
+        val listTiming = listOf("Breakfast", "Lunch", "Dinner")
+
+        val breakfast = remember{ mutableListOf<String>() }
+        val lunch = remember{ mutableListOf<String>() }
+        val dinner = remember{ mutableListOf<String>() }
+
         dbRef = FirebaseFirestore.getInstance()
-        val extras = intent.extras?.getString("id", "")
+        val docId = intent.extras?.getString("id", "") ?: ""
+
+        GlobalScope.launch(Dispatchers.IO) {
+            val detailPlan = dbRef.collection("scheduling").document(docId)
+            try{
+                val doc = detailPlan.get().await()
+                val program = doc.getString("program") ?: ""
+                val startDate = doc.getString("startDate") ?: ""
+
+                itemSize = if(program == "Daily"){
+                    1
+                }else{
+                    7
+                }
+
+                if(program == "Daily"){
+                    val planning = doc.get("planning") as? Map<String, Any>
+                    val meals = planning?.get("meals") as? List<Map<String, Any>>
+                    val nutrients = planning?.get("nutrients") as? Map<String, Any>
+
+                    var counter = 0
+
+                    meals?.forEach {map ->
+                        when(counter % 3){
+                            0 -> breakfast.add(map["title"].toString())
+                            1 -> lunch.add(map["title"].toString())
+                            2 -> dinner.add(map["title"].toString())
+                        }
+
+                        counter++
+                    }
+
+                    isLoading = false
+                }else{
+                    val planning = doc.get("planning") as? Map<String, Any>
+                }
+
+                for(i in 1..itemSize){
+
+                }
+
+            }catch(e: Exception){
+
+            }
+        }
 
         Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(LightGreen)
-                .verticalScroll(rememberScrollState()),
+                .background(LightGreen),
             contentAlignment = Alignment.TopCenter
         ){
             if(isLoading){
@@ -104,8 +161,7 @@ class ScheduleDetailActivity : ComponentActivity() {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(20.dp)
-                        .offset(y = 50.dp),
+                        .padding(20.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ){
@@ -114,101 +170,107 @@ class ScheduleDetailActivity : ComponentActivity() {
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold
                     )
-                    Card(
-                        shape = RoundedCornerShape(10.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = Green
-                        ),
-                        modifier = Modifier.padding(20.dp)
-                    ) {
-                        Column(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(15.dp),
-                            verticalArrangement = Arrangement.Top,
-                            horizontalAlignment = Alignment.Start
-                        ) {
-                            Text(
-                                text = "Start Date: Tanggal",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 20.sp
-                            )
 
-                            Text(
-                                text = "End Date: Tanggal",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 20.sp
-                            )
-
-                            Spacer(modifier = Modifier.height(40.dp))
-
-                            Text(
-                                text = "Breakfast: ",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 20.sp
-                            )
-                            ElevatedButton(
-                                onClick = { /*TODO*/ },
-                                colors = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = BottleGreen,
-                                    contentColor = Color.White
+                    LazyColumn{
+                        items(count = itemSize){item ->
+                            Card(
+                                shape = RoundedCornerShape(10.dp),
+                                colors = CardDefaults.cardColors(
+                                    containerColor = Green
                                 ),
+                                modifier = Modifier.padding(20.dp)
                             ) {
-                                Text(
-                                    text = "Detail About the Recipe",
-                                    fontSize = 16.sp
-                                )
+                                Column(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(15.dp),
+                                    verticalArrangement = Arrangement.Top,
+                                    horizontalAlignment = Alignment.Start
+                                ) {
+                                    Text(
+                                        text = "Start Date: Tanggal",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 20.sp
+                                    )
+
+                                    Text(
+                                        text = "End Date: Tanggal",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 20.sp
+                                    )
+
+                                    Spacer(modifier = Modifier.height(40.dp))
+
+                                    Text(
+                                        text = "${listTiming[0]}: ${breakfast[item]}",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 20.sp
+                                    )
+                                    ElevatedButton(
+                                        onClick = { /*TODO*/ },
+                                        colors = ButtonDefaults.elevatedButtonColors(
+                                            containerColor = BottleGreen,
+                                            contentColor = Color.White
+                                        ),
+                                    ) {
+                                        Text(
+                                            text = "Detail About the Recipe",
+                                            fontSize = 16.sp
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(20.dp))
+
+                                    Text(
+                                        text = "${listTiming[1]}: ${lunch[item]}",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 20.sp
+                                    )
+                                    ElevatedButton(
+                                        onClick = { /*TODO*/ },
+                                        colors = ButtonDefaults.elevatedButtonColors(
+                                            containerColor = BottleGreen,
+                                            contentColor = Color.White
+                                        ),
+                                    ) {
+                                        Text(
+                                            text = "Detail About the Recipe",
+                                            fontSize = 16.sp
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(20.dp))
+
+                                    Text(
+                                        text = "${listTiming[2]}: ${dinner[item]} ",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 20.sp
+                                    )
+                                    ElevatedButton(
+                                        onClick = { /*TODO*/ },
+                                        colors = ButtonDefaults.elevatedButtonColors(
+                                            containerColor = BottleGreen,
+                                            contentColor = Color.White
+                                        ),
+                                    ) {
+                                        Text(
+                                            text = "Detail About the Recipe",
+                                            fontSize = 16.sp
+                                        )
+                                    }
+
+                                    Spacer(modifier = Modifier.height(20.dp))
+
+                                    Text(
+                                        text = "Total Nutrients:",
+                                        fontWeight = FontWeight.SemiBold,
+                                        fontSize = 20.sp
+                                    )
+                                }
                             }
-
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            Text(
-                                text = "Lunch: ",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 20.sp
-                            )
-                            ElevatedButton(
-                                onClick = { /*TODO*/ },
-                                colors = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = BottleGreen,
-                                    contentColor = Color.White
-                                ),
-                            ) {
-                                Text(
-                                    text = "Detail About the Recipe",
-                                    fontSize = 16.sp
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            Text(
-                                text = "Dinner: ",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 20.sp
-                            )
-                            ElevatedButton(
-                                onClick = { /*TODO*/ },
-                                colors = ButtonDefaults.elevatedButtonColors(
-                                    containerColor = BottleGreen,
-                                    contentColor = Color.White
-                                ),
-                            ) {
-                                Text(
-                                    text = "Detail About the Recipe",
-                                    fontSize = 16.sp
-                                )
-                            }
-
-                            Spacer(modifier = Modifier.height(20.dp))
-
-                            Text(
-                                text = "Total Nutrients:",
-                                fontWeight = FontWeight.SemiBold,
-                                fontSize = 20.sp
-                            )
                         }
                     }
+
                 }
             }
         }
