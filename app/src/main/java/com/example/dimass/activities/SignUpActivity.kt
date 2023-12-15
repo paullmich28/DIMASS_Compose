@@ -65,7 +65,7 @@ class SignUpActivity : ComponentActivity() {
             contentAlignment = Alignment.Center
         ){
             Image(
-                painterResource(id = R.drawable.baseline_arrow_circle_left_24),
+                painterResource(id = R.drawable.baseline_arrow_back_ios_24),
                 contentDescription = "Back Button",
                 modifier = Modifier
                     .align(Alignment.TopStart)
