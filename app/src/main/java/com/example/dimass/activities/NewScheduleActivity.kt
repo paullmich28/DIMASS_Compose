@@ -1,8 +1,10 @@
 package com.example.dimass.activities
 
+import android.app.DatePickerDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.widget.DatePicker
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -57,6 +59,7 @@ import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.Green
 import com.example.dimass.ui.theme.LightGreen
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.FirebaseFirestore
 import retrofit2.Call
 import retrofit2.Callback
@@ -65,6 +68,8 @@ import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Date
 
 class NewScheduleActivity : ComponentActivity() {
     private val apiKey = "04c0654db4c748b28d2a2ddffe4a2cd5"
@@ -129,11 +134,29 @@ class NewScheduleActivity : ComponentActivity() {
         var dateInADay = date.plusDays(1)
         val dateInAWeek = date.plusDays(7)
 
+        var currentDate by remember{ mutableStateOf("") }
+
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
         var startDate by remember{ mutableStateOf("") }
         var endDate by remember{ mutableStateOf("") }
 
         val listProgram = listOf("Daily", "Weekly")
         var selectedOption by remember { mutableStateOf(0) }
+
+//        val calendar = Calendar.getInstance()
+//        calendar.time = Date()
+//        val year = calendar.get(Calendar.YEAR)
+//        val month = calendar.get(Calendar.MONTH) + 1
+//        val day = calendar.get(Calendar.DAY_OF_MONTH)
+//
+//        val datePickerDialog = DatePickerDialog(
+//            context,
+//            {_: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
+//                val dateFormatted = LocalDate.of(year, month, dayOfMonth)
+//                currentDate = formatter.format(dateFormatted)
+//            }, year, month, day
+//        )
 
         dbAuth = FirebaseAuth.getInstance()
         val id = dbAuth.currentUser?.uid ?: ""
@@ -318,7 +341,8 @@ class NewScheduleActivity : ComponentActivity() {
                                                 "startDate" to startDate,
                                                 "endDate" to endDate,
                                                 "planning" to dataModel,
-                                                "program" to listProgram[selectedOption]
+                                                "program" to listProgram[selectedOption],
+                                                "timestamp" to FieldValue.serverTimestamp()
                                             )
 
                                             dbRef.collection("scheduling")
@@ -347,9 +371,9 @@ class NewScheduleActivity : ComponentActivity() {
                                 })
                             }else{
                                 val call = if(typeOfFood == "Anything"){
-                                    apiServiceWeekly.getWeeklyData(apiKey, "day", null, null)
+                                    apiServiceWeekly.getWeeklyData(apiKey, "week", null, null)
                                 }else{
-                                    apiServiceWeekly.getWeeklyData(apiKey, "day", null, typeOfFood.lowercase())
+                                    apiServiceWeekly.getWeeklyData(apiKey, "week", null, typeOfFood.lowercase())
                                 }
                                 call.enqueue(object: Callback<WeeklyModel>{
                                     override fun onResponse(call: Call<WeeklyModel>, response: Response<WeeklyModel>) {
@@ -365,7 +389,8 @@ class NewScheduleActivity : ComponentActivity() {
                                                 "startDate" to startDate,
                                                 "endDate" to endDate,
                                                 "planning" to dataModel,
-                                                "program" to listProgram[selectedOption]
+                                                "program" to listProgram[selectedOption],
+                                                "timestamp" to FieldValue.serverTimestamp()
                                             )
 
                                             dbRef.collection("scheduling")
@@ -374,14 +399,14 @@ class NewScheduleActivity : ComponentActivity() {
                                                     docId = doc.id
                                                     Toast.makeText(context, "Planning Stored Successfully", Toast.LENGTH_LONG).show()
 
-                                                    val intent = Intent(this@NewScheduleActivity, ScheduleDetailActivity::class.java)
-                                                    val bundle = Bundle()
-
-                                                    bundle.putString("id", docId)
-                                                    intent.putExtras(bundle)
-
-                                                    startActivity(intent)
-                                                    finish()
+//                                                    val intent = Intent(this@NewScheduleActivity, ScheduleDetailActivity::class.java)
+//                                                    val bundle = Bundle()
+//
+//                                                    bundle.putString("id", docId)
+//                                                    intent.putExtras(bundle)
+//
+//                                                    startActivity(intent)
+//                                                    finish()
                                                 }.addOnFailureListener{
                                                     Toast.makeText(context, "Planning not stored", Toast.LENGTH_LONG).show()
                                                 }
@@ -410,6 +435,7 @@ class NewScheduleActivity : ComponentActivity() {
             }
         }
     }
+
 
     @RequiresApi(Build.VERSION_CODES.O)
     @Composable

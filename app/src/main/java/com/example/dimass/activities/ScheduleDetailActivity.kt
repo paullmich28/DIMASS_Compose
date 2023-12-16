@@ -2,9 +2,13 @@ package com.example.dimass.activities
 
 import android.annotation.SuppressLint
 import android.content.Intent
+import android.os.Build
 import android.os.Bundle
+import android.util.Log
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -15,20 +19,15 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -38,6 +37,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -55,11 +55,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
 
 class ScheduleDetailActivity : ComponentActivity() {
     private lateinit var dbRef: FirebaseFirestore
     private lateinit var dbAuth: FirebaseAuth
 
+    @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
@@ -69,6 +72,7 @@ class ScheduleDetailActivity : ComponentActivity() {
         }
     }
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("CoroutineCreationDuringComposition")
     @OptIn(DelicateCoroutinesApi::class)
     @Composable
@@ -76,7 +80,11 @@ class ScheduleDetailActivity : ComponentActivity() {
         var isLoading by remember { mutableStateOf(true) }
         var itemSize by remember{ mutableStateOf(0) }
 
+        val context = LocalContext.current
+
         val listTiming = listOf("Breakfast", "Lunch", "Dinner")
+
+        var dates = remember{ mutableListOf<LocalDate>() }
 
         val breakfast = remember{ mutableListOf<String>() }
         val lunch = remember{ mutableListOf<String>() }
@@ -85,12 +93,15 @@ class ScheduleDetailActivity : ComponentActivity() {
         dbRef = FirebaseFirestore.getInstance()
         val docId = intent.extras?.getString("id", "") ?: ""
 
+        var mealsByDays = remember{ mutableListOf<Map<String, Any>>() }
+
         GlobalScope.launch(Dispatchers.IO) {
             val detailPlan = dbRef.collection("scheduling").document(docId)
             try{
                 val doc = detailPlan.get().await()
                 val program = doc.getString("program") ?: ""
                 val startDate = doc.getString("startDate") ?: ""
+                val endDate = doc.getString("endDate") ?: ""
 
                 itemSize = if(program == "Daily"){
                     1
@@ -117,13 +128,40 @@ class ScheduleDetailActivity : ComponentActivity() {
 
                     isLoading = false
                 }else{
+                    val days = listOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
                     val planning = doc.get("planning") as? Map<String, Any>
+
+                    days.forEach{day ->
+                        val mealsEachDay = planning?.get(day) as? Map<String, Any> ?: mapOf()
+                        mealsByDays.add(mealsEachDay)
+                    }
+
+                    mealsByDays.forEach {
+                        val meals = it["meals"] as? List<Map<String, Any>>
+                        var counter = 0
+
+                        meals?.forEach {map ->
+                            when(counter % 3){
+                                0 -> breakfast.add(map["title"].toString())
+                                1 -> lunch.add(map["title"].toString())
+                                2 -> dinner.add(map["title"].toString())
+                            }
+
+                            counter++
+                        }
+                    }
+
+                    isLoading = false
                 }
 
-                for(i in 1..itemSize){
+                val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                val parsedDateStart = LocalDate.parse(startDate, formatter)
+                val parsedDateEnd = LocalDate.parse(endDate, formatter)
 
+                while(!parsedDateStart.isAfter(parsedDateEnd)){
+                    dates.add(parsedDateStart)
+                    parsedDateStart.plusDays(1)
                 }
-
             }catch(e: Exception){
 
             }
@@ -188,7 +226,7 @@ class ScheduleDetailActivity : ComponentActivity() {
                                     horizontalAlignment = Alignment.Start
                                 ) {
                                     Text(
-                                        text = "Start Date: Tanggal",
+                                        text = "Start Date: ${dates[item]}",
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 20.sp
                                     )
@@ -277,6 +315,7 @@ class ScheduleDetailActivity : ComponentActivity() {
     }
 
 
+    @RequiresApi(Build.VERSION_CODES.O)
     @Preview(showBackground = true)
     @Composable
     fun ScheduleDetailPreview() {
