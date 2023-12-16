@@ -67,6 +67,7 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.time.LocalDate
+import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
@@ -114,7 +115,6 @@ class NewScheduleActivity : ComponentActivity() {
         }
 
         val context = LocalContext.current
-        val date = LocalDate.now()
         val foodPrograms =
             listOf(
                 "Anything",
@@ -131,9 +131,6 @@ class NewScheduleActivity : ComponentActivity() {
 
         var typeOfFood by remember { mutableStateOf(foodPrograms[0]) }
 
-        var dateInADay = date.plusDays(1)
-        val dateInAWeek = date.plusDays(7)
-
         var currentDate by remember{ mutableStateOf("") }
 
         val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
@@ -144,19 +141,26 @@ class NewScheduleActivity : ComponentActivity() {
         val listProgram = listOf("Daily", "Weekly")
         var selectedOption by remember { mutableStateOf(0) }
 
-//        val calendar = Calendar.getInstance()
-//        calendar.time = Date()
-//        val year = calendar.get(Calendar.YEAR)
-//        val month = calendar.get(Calendar.MONTH) + 1
-//        val day = calendar.get(Calendar.DAY_OF_MONTH)
-//
-//        val datePickerDialog = DatePickerDialog(
-//            context,
-//            {_: DatePicker, year: Int, month: Int, dayOfMonth: Int ->
-//                val dateFormatted = LocalDate.of(year, month, dayOfMonth)
-//                currentDate = formatter.format(dateFormatted)
-//            }, year, month, day
-//        )
+        val calendar = Calendar.getInstance()
+        calendar.time = Date()
+        val year by remember{ mutableStateOf(calendar.get(Calendar.YEAR)) }
+        val month by remember{ mutableStateOf(calendar.get(Calendar.MONTH)) }
+        val day by remember{ mutableStateOf(calendar.get(Calendar.DAY_OF_MONTH)) }
+
+        val datePickerDialog = remember{
+            val dialog = DatePickerDialog(
+                context,
+                {_: DatePicker, yearDatePicker: Int, monthDatePicker: Int, dayOfMonth: Int ->
+                    val dateOriginal = LocalDate.of(yearDatePicker, monthDatePicker + 1, dayOfMonth)
+                    currentDate = formatter.format(dateOriginal)
+                }, year, month, day
+            )
+
+            val minDate = LocalDate.of(LocalDate.now().year, LocalDate.now().monthValue, LocalDate.now().plusDays(1).dayOfMonth)
+            val minDateTime = minDate.atStartOfDay().toInstant(ZoneOffset.UTC).toEpochMilli()
+            dialog.datePicker.minDate = minDateTime
+            dialog
+        }
 
         dbAuth = FirebaseAuth.getInstance()
         val id = dbAuth.currentUser?.uid ?: ""
@@ -199,6 +203,27 @@ class NewScheduleActivity : ComponentActivity() {
                     ),
                     label = { Text("Schedule Name") }
                 )
+
+                Text(
+                    text = "Date Picked: $currentDate",
+                    modifier = Modifier
+                        .padding(vertical = 10.dp)
+                )
+
+                ElevatedButton(
+                    onClick = {
+                        datePickerDialog.show()
+                    },
+                    colors = ButtonDefaults.elevatedButtonColors(
+                        containerColor = BottleGreen,
+                        contentColor = Color.White
+                    )
+                ) {
+                    Text(
+                        text = "Choose the date to start",
+                        fontSize = 16.sp,
+                    )
+                }
 
                 Text(
                     text = "Choose your scheduling type",
@@ -317,8 +342,8 @@ class NewScheduleActivity : ComponentActivity() {
 
                 ElevatedButton(
                     onClick = {
-                        if(scheduleName.isEmpty()){
-                            Toast.makeText(context, "Please fill the schedule name", Toast.LENGTH_SHORT).show()
+                        if(scheduleName.isEmpty() || currentDate.isEmpty()){
+                            Toast.makeText(context, "Please fill the schedule name and pick the date", Toast.LENGTH_SHORT).show()
                         }else{
                             if(listProgram[selectedOption] == "Daily"){
                                 val call = if(typeOfFood == "Anything"){
@@ -332,8 +357,8 @@ class NewScheduleActivity : ComponentActivity() {
                                         if(response.isSuccessful){
                                             var docId: String
                                             val dataModel = response.body()
-                                            startDate = dateInADay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                                            endDate = dateInADay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                            startDate = currentDate
+                                            endDate = currentDate
 
                                             val hashMap = hashMapOf(
                                                 "uid" to id,
@@ -380,8 +405,10 @@ class NewScheduleActivity : ComponentActivity() {
                                         if(response.isSuccessful){
                                             var docId: String
                                             val dataModel = response.body()?.week
-                                            startDate = dateInADay.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
-                                            endDate = dateInAWeek.format(DateTimeFormatter.ofPattern("dd/MM/yyyy"))
+                                            val endDateNotif = LocalDate.parse(currentDate, formatter).plusDays(6)
+
+                                            startDate = currentDate
+                                            endDate = formatter.format(endDateNotif)
 
                                             val hashMap = hashMapOf(
                                                 "uid" to id,
@@ -399,14 +426,14 @@ class NewScheduleActivity : ComponentActivity() {
                                                     docId = doc.id
                                                     Toast.makeText(context, "Planning Stored Successfully", Toast.LENGTH_LONG).show()
 
-//                                                    val intent = Intent(this@NewScheduleActivity, ScheduleDetailActivity::class.java)
-//                                                    val bundle = Bundle()
-//
-//                                                    bundle.putString("id", docId)
-//                                                    intent.putExtras(bundle)
-//
-//                                                    startActivity(intent)
-//                                                    finish()
+                                                    val intent = Intent(this@NewScheduleActivity, ScheduleDetailActivity::class.java)
+                                                    val bundle = Bundle()
+
+                                                    bundle.putString("id", docId)
+                                                    intent.putExtras(bundle)
+
+                                                    startActivity(intent)
+                                                    finish()
                                                 }.addOnFailureListener{
                                                     Toast.makeText(context, "Planning not stored", Toast.LENGTH_LONG).show()
                                                 }

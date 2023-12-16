@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -83,16 +84,29 @@ class ScheduleDetailActivity : ComponentActivity() {
 
         val listTiming = listOf("Breakfast", "Lunch", "Dinner")
 
-        var dates = remember{ mutableListOf<LocalDate>() }
+        val dates = remember{ mutableListOf<LocalDate>() }
 
         val breakfast = remember{ mutableListOf<String>() }
         val lunch = remember{ mutableListOf<String>() }
         val dinner = remember{ mutableListOf<String>() }
 
+        val calories = remember{ mutableListOf<String>() }
+        val carbohydrates = remember{ mutableListOf<String>() }
+        val fat = remember{ mutableListOf<String>() }
+        val protein = remember{ mutableListOf<String>() }
+
+        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+
+        var startDateDisplay by remember{ mutableStateOf("") }
+        var endDateDisplay by remember{ mutableStateOf("") }
+
+        var scheduleName by remember{ mutableStateOf("") }
+
         dbRef = FirebaseFirestore.getInstance()
         val docId = intent.extras?.getString("id", "") ?: ""
 
         val mealsByDays = remember{ mutableListOf<Map<String, Any>>() }
+        val nutrientsByDays = remember{ mutableListOf<Map<String, Any>>() }
 
         lifecycleScope.launch(Dispatchers.IO) {
             try{
@@ -102,6 +116,8 @@ class ScheduleDetailActivity : ComponentActivity() {
                     val program = doc.getString("program") ?: ""
                     val startDate = doc.getString("startDate") ?: ""
                     val endDate = doc.getString("endDate") ?: ""
+
+                    scheduleName = doc.getString("name") ?: ""
 
                     itemSize = if(program == "Daily"){
                         1
@@ -125,6 +141,12 @@ class ScheduleDetailActivity : ComponentActivity() {
 
                             counter++
                         }
+
+
+                        calories.add(nutrients?.get("calories").toString())
+                        carbohydrates.add(nutrients?.get("carbohydrates").toString())
+                        fat.add(nutrients?.get("fat").toString())
+                        protein.add(nutrients?.get("protein").toString())
                     }else{
                         val days = listOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
                         val planning = doc.get("planning") as? Map<String, Any>
@@ -136,6 +158,7 @@ class ScheduleDetailActivity : ComponentActivity() {
 
                         mealsByDays.forEach {
                             val meals = it["meals"] as? List<Map<String, Any>>
+                            val nutrients = it["nutrients"] as? Map<String, Any>
                             var counter = 0
 
                             meals?.forEach {map ->
@@ -147,26 +170,22 @@ class ScheduleDetailActivity : ComponentActivity() {
 
                                 counter++
                             }
+
+                            calories.add(nutrients?.get("calories").toString())
+                            carbohydrates.add(nutrients?.get("carbohydrates").toString())
+                            fat.add(nutrients?.get("fat").toString())
+                            protein.add(nutrients?.get("protein").toString())
                         }
                     }
 
-                    Log.d("Testing", "Sampe sini")
-
-                    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                    var parsedDateStart = LocalDate.parse(startDate, formatter)
-                    val parsedDateEnd = LocalDate.parse(endDate, formatter)
-
-                    while(!parsedDateStart.isAfter(parsedDateEnd)){
-                        dates.add(parsedDateStart)
-                        parsedDateStart = parsedDateStart.plusDays(1)
-                    }
-
+                    startDateDisplay = startDate
+                    endDateDisplay = endDate
                     isLoading = false
                 }catch (e: Exception){
-
+                    Log.d("Testing", e.message!!)
                 }
             }catch(e: Exception){
-
+                Log.d("Testing", e.message!!)
             }
         }
 
@@ -187,7 +206,7 @@ class ScheduleDetailActivity : ComponentActivity() {
                     contentDescription = "Back Button",
                     modifier = Modifier
                         .align(Alignment.TopStart)
-                        .padding(10.dp, 10.dp, 0.dp, 0.dp)
+                        .padding(20.dp, 10.dp, 0.dp, 0.dp)
                         .size(48.dp, 48.dp)
                         .clickable {
                             startActivity(
@@ -202,17 +221,28 @@ class ScheduleDetailActivity : ComponentActivity() {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .padding(20.dp),
+                        .padding(20.dp)
+                        .offset(y = 40.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
                     verticalArrangement = Arrangement.Top
                 ){
                     Text(
-                        text = "Scheduling Detail: Nama" ,
+                        text = "Scheduling Detail: $scheduleName" ,
                         fontSize = 24.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.padding(top = 10.dp)
                     )
 
-                    LazyColumn{
+                    Text(
+                        text = "$startDateDisplay - $endDateDisplay",
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 20.sp,
+                        modifier = Modifier.padding(vertical = 10.dp)
+                    )
+
+                    LazyColumn(
+                        modifier = Modifier.padding(bottom = 40.dp)
+                    ){
                         items(count = itemSize){item ->
                             Card(
                                 shape = RoundedCornerShape(10.dp),
@@ -229,19 +259,10 @@ class ScheduleDetailActivity : ComponentActivity() {
                                     horizontalAlignment = Alignment.Start
                                 ) {
                                     Text(
-                                        text = "Start Date: ${dates[item]}",
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 20.sp
+                                        text = "Day ${item + 1}",
+                                        fontSize = 30.sp,
+                                        fontWeight = FontWeight.Bold
                                     )
-
-                                    Text(
-                                        text = "End Date: Tanggal",
-                                        fontWeight = FontWeight.SemiBold,
-                                        fontSize = 20.sp
-                                    )
-
-                                    Spacer(modifier = Modifier.height(40.dp))
-
                                     Text(
                                         text = "${listTiming[0]}: ${breakfast[item]}",
                                         fontWeight = FontWeight.SemiBold,
@@ -306,6 +327,22 @@ class ScheduleDetailActivity : ComponentActivity() {
                                         text = "Total Nutrients:",
                                         fontWeight = FontWeight.SemiBold,
                                         fontSize = 20.sp
+                                    )
+
+                                    Text(
+                                        text = "Calories: ${calories[item]}"
+                                    )
+
+                                    Text(
+                                        text = "Carbohydrates: ${carbohydrates[item]}"
+                                    )
+
+                                    Text(
+                                        text = "Fat: ${fat[item]}"
+                                    )
+
+                                    Text(
+                                        text = "Protein: ${protein[item]}"
                                     )
                                 }
                             }
