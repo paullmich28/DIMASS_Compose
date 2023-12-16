@@ -43,6 +43,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.example.dimass.R
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
@@ -80,8 +81,6 @@ class ScheduleDetailActivity : ComponentActivity() {
         var isLoading by remember { mutableStateOf(true) }
         var itemSize by remember{ mutableStateOf(0) }
 
-        val context = LocalContext.current
-
         val listTiming = listOf("Breakfast", "Lunch", "Dinner")
 
         var dates = remember{ mutableListOf<LocalDate>() }
@@ -93,51 +92,28 @@ class ScheduleDetailActivity : ComponentActivity() {
         dbRef = FirebaseFirestore.getInstance()
         val docId = intent.extras?.getString("id", "") ?: ""
 
-        var mealsByDays = remember{ mutableListOf<Map<String, Any>>() }
+        val mealsByDays = remember{ mutableListOf<Map<String, Any>>() }
 
-        GlobalScope.launch(Dispatchers.IO) {
-            val detailPlan = dbRef.collection("scheduling").document(docId)
+        lifecycleScope.launch(Dispatchers.IO) {
             try{
-                val doc = detailPlan.get().await()
-                val program = doc.getString("program") ?: ""
-                val startDate = doc.getString("startDate") ?: ""
-                val endDate = doc.getString("endDate") ?: ""
+                val detailPlan = dbRef.collection("scheduling").document(docId)
+                try{
+                    val doc = detailPlan.get().await()
+                    val program = doc.getString("program") ?: ""
+                    val startDate = doc.getString("startDate") ?: ""
+                    val endDate = doc.getString("endDate") ?: ""
 
-                itemSize = if(program == "Daily"){
-                    1
-                }else{
-                    7
-                }
-
-                if(program == "Daily"){
-                    val planning = doc.get("planning") as? Map<String, Any>
-                    val meals = planning?.get("meals") as? List<Map<String, Any>>
-                    val nutrients = planning?.get("nutrients") as? Map<String, Any>
-
-                    var counter = 0
-
-                    meals?.forEach {map ->
-                        when(counter % 3){
-                            0 -> breakfast.add(map["title"].toString())
-                            1 -> lunch.add(map["title"].toString())
-                            2 -> dinner.add(map["title"].toString())
-                        }
-
-                        counter++
+                    itemSize = if(program == "Daily"){
+                        1
+                    }else{
+                        7
                     }
 
-                    isLoading = false
-                }else{
-                    val days = listOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
-                    val planning = doc.get("planning") as? Map<String, Any>
+                    if(program == "Daily"){
+                        val planning = doc.get("planning") as? Map<String, Any>
+                        val meals = planning?.get("meals") as? List<Map<String, Any>>
+                        val nutrients = planning?.get("nutrients") as? Map<String, Any>
 
-                    days.forEach{day ->
-                        val mealsEachDay = planning?.get(day) as? Map<String, Any> ?: mapOf()
-                        mealsByDays.add(mealsEachDay)
-                    }
-
-                    mealsByDays.forEach {
-                        val meals = it["meals"] as? List<Map<String, Any>>
                         var counter = 0
 
                         meals?.forEach {map ->
@@ -149,18 +125,45 @@ class ScheduleDetailActivity : ComponentActivity() {
 
                             counter++
                         }
+                    }else{
+                        val days = listOf("monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday")
+                        val planning = doc.get("planning") as? Map<String, Any>
+
+                        days.forEach{day ->
+                            val mealsEachDay = planning?.get(day) as? Map<String, Any> ?: mapOf()
+                            mealsByDays.add(mealsEachDay)
+                        }
+
+                        mealsByDays.forEach {
+                            val meals = it["meals"] as? List<Map<String, Any>>
+                            var counter = 0
+
+                            meals?.forEach {map ->
+                                when(counter % 3){
+                                    0 -> breakfast.add(map["title"].toString())
+                                    1 -> lunch.add(map["title"].toString())
+                                    2 -> dinner.add(map["title"].toString())
+                                }
+
+                                counter++
+                            }
+                        }
+                    }
+
+                    Log.d("Testing", "Sampe sini")
+
+                    val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
+                    var parsedDateStart = LocalDate.parse(startDate, formatter)
+                    val parsedDateEnd = LocalDate.parse(endDate, formatter)
+
+                    while(!parsedDateStart.isAfter(parsedDateEnd)){
+                        dates.add(parsedDateStart)
+                        parsedDateStart = parsedDateStart.plusDays(1)
                     }
 
                     isLoading = false
-                }
+                }catch (e: Exception){
 
-                val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-                val parsedDateStart = LocalDate.parse(startDate, formatter)
-                val parsedDateEnd = LocalDate.parse(endDate, formatter)
-
-                while(!parsedDateStart.isAfter(parsedDateEnd)){
-                    dates.add(parsedDateStart)
-                    parsedDateStart.plusDays(1)
                 }
             }catch(e: Exception){
 
