@@ -1,9 +1,18 @@
 package com.example.dimass.activities
 
+import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.AlertDialog
 import android.app.DatePickerDialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
+import android.text.format.DateFormat
+import android.util.Log
 import android.widget.DatePicker
 import android.widget.Toast
 import androidx.activity.ComponentActivity
@@ -54,6 +63,11 @@ import com.example.dimass.api.daily.DailyModel
 import com.example.dimass.api.service.ApiServiceDaily
 import com.example.dimass.api.service.ApiServiceWeekly
 import com.example.dimass.api.weekly.WeeklyModel
+import com.example.dimass.model.Notification
+import com.example.dimass.model.channelID
+import com.example.dimass.model.messageExtra
+import com.example.dimass.model.notificationID
+import com.example.dimass.model.titleExtra
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.Green
@@ -67,6 +81,8 @@ import retrofit2.Response
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.ZoneOffset
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
@@ -340,11 +356,15 @@ class NewScheduleActivity : ComponentActivity() {
                     }
                 }
 
+
+
                 ElevatedButton(
                     onClick = {
                         if(scheduleName.isEmpty() || currentDate.isEmpty()){
                             Toast.makeText(context, "Please fill the schedule name and pick the date", Toast.LENGTH_SHORT).show()
                         }else{
+                            scheduleNotification()
+
                             if(listProgram[selectedOption] == "Daily"){
                                 val call = if(typeOfFood == "Anything"){
                                     apiServiceDaily.getDailyData(apiKey, "day", null, null)
@@ -375,6 +395,8 @@ class NewScheduleActivity : ComponentActivity() {
                                                 .addOnSuccessListener {doc ->
                                                     docId = doc.id
                                                     Toast.makeText(context, "Planning Stored Successfully", Toast.LENGTH_LONG).show()
+
+                                                    scheduleNotification()
 
                                                     val intent = Intent(this@NewScheduleActivity, ScheduleDetailActivity::class.java)
                                                     val bundle = Bundle()
@@ -463,6 +485,57 @@ class NewScheduleActivity : ComponentActivity() {
         }
     }
 
+
+    @SuppressLint("ScheduleExactAlarm")
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun scheduleNotification(){
+        createNotificationChannel()
+
+        val intent = Intent(applicationContext, Notification::class.java)
+        val title = "DIMASS"
+        val message = "Don't forget about your meal planning"
+        intent.putExtra(titleExtra, title)
+        intent.putExtra(messageExtra, message)
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            applicationContext,
+            notificationID,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val time = getTime()
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            time,
+            pendingIntent
+        )
+
+        Log.d("Lagi", "Ya")
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getTime(): Long{
+        val localDateTime = LocalDateTime.now()
+        val zoneId = ZoneId.systemDefault()
+        val zonedDateTime = localDateTime.atZone(zoneId)
+
+        return zonedDateTime.toInstant().toEpochMilli()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelID, "Channel Name", NotificationManager.IMPORTANCE_HIGH)
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }else{
+            val channel = NotificationChannel(channelID, "Channel Name", NotificationManager.IMPORTANCE_HIGH)
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }
+    }
 
     @RequiresApi(Build.VERSION_CODES.O)
     @Composable

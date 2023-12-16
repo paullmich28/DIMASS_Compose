@@ -1,5 +1,6 @@
 package com.example.dimass.activities
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -13,6 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
@@ -35,6 +37,11 @@ import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.LightGreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class NewUserActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -47,22 +54,34 @@ class NewUserActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("CoroutineCreationDuringComposition")
+    @OptIn(DelicateCoroutinesApi::class)
     @Composable
     fun NewUserPage(){
         var fName by remember{ mutableStateOf("") }
         var lName by remember{ mutableStateOf("") }
+        var isLoading by remember{ mutableStateOf(true) }
 
         val id: String = FirebaseAuth.getInstance().currentUser?.uid ?: ""
         val dbRef = FirebaseFirestore.getInstance()
 
-        dbRef
-            .collection("accounts")
-            .document(id)
-            .get()
-            .addOnSuccessListener {
-                fName = it.data?.get("firstName").toString()
-                lName = it.data?.get("lastName").toString()
+        GlobalScope.launch(Dispatchers.IO){
+            try{
+                val doc = dbRef
+                    .collection("accounts")
+                    .document(id)
+                    .get()
+                    .await()
+
+                fName = doc.getString("firstName") ?: ""
+                lName = doc.getString("lastName") ?: ""
+
+                isLoading = false
+            }catch(e: Exception){
+
             }
+        }
+
 
         Box(
             modifier = Modifier
@@ -70,11 +89,18 @@ class NewUserActivity : ComponentActivity() {
                 .background(LightGreen),
             contentAlignment = Alignment.Center
         ){
-            Column(
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                GreetingText(fName, lName)
-                FormNewUser()
+            if(isLoading){
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = BottleGreen
+                )
+            }else{
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    GreetingText(fName, lName)
+                    FormNewUser()
+                }
             }
         }
     }

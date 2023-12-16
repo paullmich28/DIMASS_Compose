@@ -1,6 +1,11 @@
 package com.example.dimass.activities
 
 import android.annotation.SuppressLint
+import android.app.AlarmManager
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -46,6 +51,11 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.example.dimass.R
+import com.example.dimass.model.Notification
+import com.example.dimass.model.channelID
+import com.example.dimass.model.messageExtra
+import com.example.dimass.model.notificationID
+import com.example.dimass.model.titleExtra
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.Green
@@ -58,7 +68,10 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
+import java.util.Calendar
 
 class ScheduleDetailActivity : ComponentActivity() {
     private lateinit var dbRef: FirebaseFirestore
@@ -269,7 +282,7 @@ class ScheduleDetailActivity : ComponentActivity() {
                                         fontSize = 20.sp
                                     )
                                     ElevatedButton(
-                                        onClick = { /*TODO*/ },
+                                        onClick = { scheduleNotification() },
                                         colors = ButtonDefaults.elevatedButtonColors(
                                             containerColor = BottleGreen,
                                             contentColor = Color.White
@@ -289,7 +302,7 @@ class ScheduleDetailActivity : ComponentActivity() {
                                         fontSize = 20.sp
                                     )
                                     ElevatedButton(
-                                        onClick = { /*TODO*/ },
+                                        onClick = { scheduleNotification() },
                                         colors = ButtonDefaults.elevatedButtonColors(
                                             containerColor = BottleGreen,
                                             contentColor = Color.White
@@ -309,7 +322,7 @@ class ScheduleDetailActivity : ComponentActivity() {
                                         fontSize = 20.sp
                                     )
                                     ElevatedButton(
-                                        onClick = { /*TODO*/ },
+                                        onClick = { scheduleNotification() },
                                         colors = ButtonDefaults.elevatedButtonColors(
                                             containerColor = BottleGreen,
                                             contentColor = Color.White
@@ -351,6 +364,63 @@ class ScheduleDetailActivity : ComponentActivity() {
 
                 }
             }
+        }
+    }
+
+    @SuppressLint("ScheduleExactAlarm")
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun scheduleNotification(){
+        createNotificationChannel()
+
+        val intent = Intent(applicationContext, Notification::class.java)
+        val title = "DIMASS"
+        val message = "Don't forget about your meal planning"
+        intent.putExtra(titleExtra, title)
+        intent.putExtra(messageExtra, message)
+
+        val pendingIntent = PendingIntent.getBroadcast(
+            applicationContext,
+            notificationID,
+            intent,
+            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+        )
+
+        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val time = getTime()
+        alarmManager.setExactAndAllowWhileIdle(
+            AlarmManager.RTC_WAKEUP,
+            time,
+            pendingIntent
+        )
+
+        Log.d("Lagi", "Ya")
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun getTime(): Long{
+        val minute = LocalDateTime.now().minute.plus(1)
+        val hour = LocalDateTime.now().hour
+        val year = LocalDateTime.now().year
+        val month = LocalDateTime.now().monthValue
+        val day = LocalDateTime.now().dayOfMonth
+
+        val localDateTime = LocalDateTime.of(year, month, day, hour, minute)
+        val zoneId = ZoneId.systemDefault()
+        val zonedDateTime = localDateTime.atZone(zoneId)
+
+        return zonedDateTime.toInstant().toEpochMilli()
+    }
+
+    @RequiresApi(Build.VERSION_CODES.O)
+    private fun createNotificationChannel(){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val channel = NotificationChannel(channelID, "Channel Name", NotificationManager.IMPORTANCE_HIGH)
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
+        }else{
+            val channel = NotificationChannel(channelID, "Channel Name", NotificationManager.IMPORTANCE_HIGH)
+            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+            notificationManager.createNotificationChannel(channel)
         }
     }
 

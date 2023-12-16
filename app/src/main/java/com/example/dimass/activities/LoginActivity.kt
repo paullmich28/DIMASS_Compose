@@ -1,5 +1,6 @@
 package com.example.dimass.activities
 
+import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
@@ -19,6 +20,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
@@ -40,6 +42,7 @@ import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.lifecycleScope
 import com.example.dimass.R
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
@@ -47,18 +50,33 @@ import com.example.dimass.ui.theme.LightGreen
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.FirebaseFirestore
+import kotlinx.coroutines.DelicateCoroutinesApi
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class LoginActivity : ComponentActivity() {
-    private lateinit var dbRef: DocumentReference
-    private lateinit var dbAuth: FirebaseAuth
-
     override fun onStart() {
         super.onStart()
 
         if(FirebaseAuth.getInstance().currentUser != null){
-            val intent = Intent(this@LoginActivity, MainPageActivity::class.java)
-            startActivity(intent)
-            finish()
+
+            val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
+
+            val dbRef = FirebaseFirestore.getInstance()
+                .collection("accounts")
+                .document(id)
+
+            dbRef.get()
+                .addOnSuccessListener {doc ->
+                    if(doc.getLong("height") == 0L || doc.getLong("weight") == 0L){
+                        val intent = Intent(this@LoginActivity, NewUserActivity::class.java)
+                        startActivity(intent)
+                    }else{
+                        val intent = Intent(this@LoginActivity, MainPageActivity::class.java)
+                        startActivity(intent)
+                    }
+                }
         }
     }
 
@@ -72,29 +90,46 @@ class LoginActivity : ComponentActivity() {
         }
     }
 
+    @SuppressLint("CoroutineCreationDuringComposition")
+    @OptIn(DelicateCoroutinesApi::class)
     @Composable
     fun LoginPage() {
+        var isLoading by remember { mutableStateOf(true) }
+        var height by remember{ mutableStateOf(0L) }
+        var weight by remember{ mutableStateOf(0L) }
+
+        val dbAuth = FirebaseAuth.getInstance()
+
+        isLoading = false
+
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(LightGreen),
             contentAlignment = Alignment.TopCenter
         ) {
-            Column(
-                Modifier.fillMaxHeight(),
-                verticalArrangement = Arrangement.SpaceBetween
-            ) {
-                Column {
-                    LogoSignIn()
-                    FormSignIn()
-                }
-
-                Row(
-                    modifier = Modifier
-                        .weight(1f, false)
-                        .padding(0.dp, 20.dp)
+            if(isLoading){
+                CircularProgressIndicator(
+                    modifier = Modifier.align(Alignment.Center),
+                    color = BottleGreen
+                )
+            }else{
+                Column(
+                    Modifier.fillMaxHeight(),
+                    verticalArrangement = Arrangement.SpaceBetween
                 ) {
-                    SignUpOption()
+                    Column {
+                        LogoSignIn()
+                        FormSignIn()
+                    }
+
+                    Row(
+                        modifier = Modifier
+                            .weight(1f, false)
+                            .padding(0.dp, 20.dp)
+                    ) {
+                        SignUpOption()
+                    }
                 }
             }
         }
@@ -120,7 +155,7 @@ class LoginActivity : ComponentActivity() {
         
         val context = LocalContext.current
 
-        dbAuth = FirebaseAuth.getInstance()
+        val dbAuth = FirebaseAuth.getInstance()
 
         OutlinedTextField(
             value = email,

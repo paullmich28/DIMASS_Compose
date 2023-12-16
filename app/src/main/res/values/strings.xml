@@ -4,4 +4,5 @@
     <string name="title_activity_main_page">MainPageActivity</string>
     <string name="title_activity_bmi">BmiActivity</string>
     <string name="title_activity_schedule_detail">ScheduleDetailActivity</string>
+    <string name="title_activity_test">TestActivity</string>
 </resources>
