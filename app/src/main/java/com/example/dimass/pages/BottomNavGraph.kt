@@ -23,8 +23,5 @@ fun BottomNavGraph(navController: NavHostController){
             ProfileScreen()
         }
 
-        composable(route = BottomBarScreen.Settings.route){
-            SettingsScreen()
-        }
     }
 }

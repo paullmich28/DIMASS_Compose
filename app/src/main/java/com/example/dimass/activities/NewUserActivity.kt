@@ -19,6 +19,7 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -128,7 +129,13 @@ class NewUserActivity : ComponentActivity() {
             label = { Text("Weight (in kg)") },
             modifier = Modifier
                 .padding(0.dp, 50.dp, 0.dp, 0.dp)
-                .fillMaxWidth(0.6f)
+                .fillMaxWidth(0.6f),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = Color.Black,
+                unfocusedBorderColor = Color.Black,
+                focusedLabelColor = Color.Black,
+                textColor = Color.Black
+            )
         )
 
         OutlinedTextField(
@@ -139,7 +146,13 @@ class NewUserActivity : ComponentActivity() {
             ),
             label = { Text("Height (in cm)") },
             modifier = Modifier
-                .fillMaxWidth(0.6f)
+                .fillMaxWidth(0.6f),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = Color.Black,
+                unfocusedBorderColor = Color.Black,
+                focusedLabelColor = Color.Black,
+                textColor = Color.Black
+            )
         )
 
         ElevatedButton(

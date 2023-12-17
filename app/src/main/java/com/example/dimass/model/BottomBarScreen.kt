@@ -22,10 +22,4 @@ sealed class BottomBarScreen(
         title = "Profile",
         icon = Icons.Default.Person
     )
-
-    object Settings: BottomBarScreen(
-        route = "settings",
-        title = "Settings",
-        icon = Icons.Default.Settings
-    )
 }

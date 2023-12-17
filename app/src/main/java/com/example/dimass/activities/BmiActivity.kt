@@ -152,12 +152,14 @@ class BmiActivity : ComponentActivity() {
                 ) {
                     Text(
                         text = "Your BMI is $bmi",
-                        fontSize = 15.sp
+                        fontSize = 15.sp,
+                        color = Color.Black
                     )
                     Text(
                         text = "You're $category",
                         modifier = Modifier.padding(0.dp, 15.dp, 0.dp, 0.dp),
-                        fontSize = 25.sp
+                        fontSize = 25.sp,
+                        color = Color.Black
                     )
                 }
             }
@@ -165,7 +167,8 @@ class BmiActivity : ComponentActivity() {
             Text(
                 text = programRec,
                 modifier = Modifier
-                    .padding(0.dp, 10.dp)
+                    .padding(0.dp, 10.dp),
+                color = Color.Black
             )
 
             ExposedDropdownMenuBox(

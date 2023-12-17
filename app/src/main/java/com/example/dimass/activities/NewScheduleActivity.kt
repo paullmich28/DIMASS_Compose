@@ -44,6 +44,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -66,7 +67,6 @@ import com.example.dimass.api.weekly.WeeklyModel
 import com.example.dimass.model.Notification
 import com.example.dimass.model.channelID
 import com.example.dimass.model.messageExtra
-import com.example.dimass.model.notificationID
 import com.example.dimass.model.titleExtra
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
@@ -209,7 +209,8 @@ class NewScheduleActivity : ComponentActivity() {
                     text = "Add Schedule",
                     fontSize = 32.sp,
                     modifier = Modifier.padding(0.dp, 20.dp),
-                    fontWeight = FontWeight.Bold
+                    fontWeight = FontWeight.Bold,
+                    color = Color.Black
                 )
                 OutlinedTextField(
                     value = scheduleName,
@@ -217,13 +218,23 @@ class NewScheduleActivity : ComponentActivity() {
                     keyboardOptions = KeyboardOptions(
                         keyboardType = KeyboardType.Text
                     ),
-                    label = { Text("Schedule Name") }
+                    label = { Text(
+                        text = "Schedule Name",
+                        color = Color.Black
+                    ) },
+                    colors = TextFieldDefaults.outlinedTextFieldColors(
+                        focusedBorderColor = Color.Black,
+                        unfocusedBorderColor = Color.Black,
+                        focusedLabelColor = Color.Black,
+                        textColor = Color.Black
+                    )
                 )
 
                 Text(
                     text = "Date Picked: $currentDate",
                     modifier = Modifier
-                        .padding(vertical = 10.dp)
+                        .padding(vertical = 10.dp),
+                    color = Color.Black
                 )
 
                 ElevatedButton(
@@ -244,7 +255,8 @@ class NewScheduleActivity : ComponentActivity() {
                 Text(
                     text = "Choose your scheduling type",
                     fontSize = 16.sp,
-                    modifier = Modifier.padding(top = 15.dp)
+                    modifier = Modifier.padding(top = 15.dp),
+                    color = Color.Black
                 )
 
                 Row(
@@ -304,7 +316,7 @@ class NewScheduleActivity : ComponentActivity() {
                                 )
                             }else{
                                 ButtonDefaults.outlinedButtonColors(
-                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    containerColor = Color.White,
                                     contentColor = Green
                                 )
                             }
@@ -318,7 +330,8 @@ class NewScheduleActivity : ComponentActivity() {
 
                 Text(
                     text = "Choose your food type",
-                    modifier = Modifier.padding(top = 20.dp, bottom = 5.dp)
+                    modifier = Modifier.padding(top = 20.dp, bottom = 5.dp),
+                    color = Color.Black
                 )
 
                 ExposedDropdownMenuBox(
@@ -332,7 +345,12 @@ class NewScheduleActivity : ComponentActivity() {
                         trailingIcon = {
                             ExposedDropdownMenuDefaults.TrailingIcon(expanded = isExpanded)
                         },
-                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(),
+                        colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors(
+                            focusedBorderColor = Color.Black,
+                            unfocusedBorderColor = Color.Black,
+                            focusedLabelColor = Color.Black,
+                            textColor = Color.Black
+                        ),
                         modifier = Modifier.menuAnchor()
                     )
 
@@ -356,15 +374,11 @@ class NewScheduleActivity : ComponentActivity() {
                     }
                 }
 
-
-
                 ElevatedButton(
                     onClick = {
                         if(scheduleName.isEmpty() || currentDate.isEmpty()){
                             Toast.makeText(context, "Please fill the schedule name and pick the date", Toast.LENGTH_SHORT).show()
                         }else{
-                            scheduleNotification()
-
                             if(listProgram[selectedOption] == "Daily"){
                                 val call = if(typeOfFood == "Anything"){
                                     apiServiceDaily.getDailyData(apiKey, "day", null, null)
@@ -380,6 +394,17 @@ class NewScheduleActivity : ComponentActivity() {
                                             startDate = currentDate
                                             endDate = currentDate
 
+                                            val parsedDateForNotif = LocalDate.parse(currentDate, formatter)
+                                            val hours = listOf(8, 12, 18)
+                                            val minutes = 0
+                                            val notificationIDs = mutableListOf<Int>()
+
+                                            hours.forEachIndexed {i, hour ->
+                                                val notificationID = System.currentTimeMillis().toInt() + i
+                                                notificationIDs.add(notificationID)
+                                                scheduleNotification(parsedDateForNotif, hour, minutes, notificationID)
+                                            }
+
                                             val hashMap = hashMapOf(
                                                 "uid" to id,
                                                 "name" to scheduleName,
@@ -387,7 +412,8 @@ class NewScheduleActivity : ComponentActivity() {
                                                 "endDate" to endDate,
                                                 "planning" to dataModel,
                                                 "program" to listProgram[selectedOption],
-                                                "timestamp" to FieldValue.serverTimestamp()
+                                                "timestamp" to FieldValue.serverTimestamp(),
+                                                "key_notification" to notificationIDs
                                             )
 
                                             dbRef.collection("scheduling")
@@ -395,8 +421,6 @@ class NewScheduleActivity : ComponentActivity() {
                                                 .addOnSuccessListener {doc ->
                                                     docId = doc.id
                                                     Toast.makeText(context, "Planning Stored Successfully", Toast.LENGTH_LONG).show()
-
-                                                    scheduleNotification()
 
                                                     val intent = Intent(this@NewScheduleActivity, ScheduleDetailActivity::class.java)
                                                     val bundle = Bundle()
@@ -432,6 +456,21 @@ class NewScheduleActivity : ComponentActivity() {
                                             startDate = currentDate
                                             endDate = formatter.format(endDateNotif)
 
+                                            val parsedDateForNotif = LocalDate.parse(currentDate, formatter)
+                                            val hours = listOf(8, 12, 18)
+                                            val minutes = 0
+                                            val notificationIDs = mutableListOf<Int>()
+
+                                            for(i in 0..6){
+                                                hours.forEachIndexed {j, hour ->
+                                                    val notificationID = System.currentTimeMillis().toInt() + j
+                                                    notificationIDs.add(notificationID)
+                                                    scheduleNotification(parsedDateForNotif, hour, minutes, notificationID)
+                                                }
+
+                                                parsedDateForNotif.plusDays(1)
+                                            }
+
                                             val hashMap = hashMapOf(
                                                 "uid" to id,
                                                 "name" to scheduleName,
@@ -439,7 +478,8 @@ class NewScheduleActivity : ComponentActivity() {
                                                 "endDate" to endDate,
                                                 "planning" to dataModel,
                                                 "program" to listProgram[selectedOption],
-                                                "timestamp" to FieldValue.serverTimestamp()
+                                                "timestamp" to FieldValue.serverTimestamp(),
+                                                "key_notification" to notificationIDs
                                             )
 
                                             dbRef.collection("scheduling")
@@ -488,12 +528,11 @@ class NewScheduleActivity : ComponentActivity() {
 
     @SuppressLint("ScheduleExactAlarm")
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun scheduleNotification(){
+    private fun scheduleNotification(date: LocalDate, hour: Int, minute: Int, notificationID: Int){
         createNotificationChannel()
-
         val intent = Intent(applicationContext, Notification::class.java)
         val title = "DIMASS"
-        val message = "Don't forget about your meal planning"
+        val message = "Don't forget about your meal planning $minute"
         intent.putExtra(titleExtra, title)
         intent.putExtra(messageExtra, message)
 
@@ -504,11 +543,15 @@ class NewScheduleActivity : ComponentActivity() {
             PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
         )
 
+        val year = date.year
+        val month = date.monthValue
+        val day = date.dayOfMonth
+
         val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val time = getTime()
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            time,
+        val time = getTime(year, month, day, hour, minute)
+        val alarmClockInfo = AlarmManager.AlarmClockInfo(time, pendingIntent)
+        alarmManager.setAlarmClock(
+            alarmClockInfo,
             pendingIntent
         )
 
@@ -516,8 +559,8 @@ class NewScheduleActivity : ComponentActivity() {
     }
 
     @RequiresApi(Build.VERSION_CODES.O)
-    private fun getTime(): Long{
-        val localDateTime = LocalDateTime.now()
+    private fun getTime(year: Int, month: Int, day: Int, hour: Int, minute: Int): Long{
+        val localDateTime = LocalDateTime.of(year, month, day, hour, minute)
         val zoneId = ZoneId.systemDefault()
         val zonedDateTime = localDateTime.atZone(zoneId)
 

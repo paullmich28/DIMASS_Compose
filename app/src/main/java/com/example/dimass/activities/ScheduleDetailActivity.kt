@@ -1,16 +1,11 @@
 package com.example.dimass.activities
 
 import android.annotation.SuppressLint
-import android.app.AlarmManager
-import android.app.NotificationChannel
-import android.app.NotificationManager
-import android.app.PendingIntent
-import android.content.Context
+import android.app.AlertDialog
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
-import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.annotation.RequiresApi
@@ -24,11 +19,14 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -43,7 +41,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,31 +48,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.example.dimass.R
-import com.example.dimass.model.Notification
-import com.example.dimass.model.channelID
-import com.example.dimass.model.messageExtra
-import com.example.dimass.model.notificationID
-import com.example.dimass.model.titleExtra
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.Green
 import com.example.dimass.ui.theme.LightGreen
-import com.google.firebase.auth.FirebaseAuth
+import com.example.dimass.ui.theme.Red
 import com.google.firebase.firestore.FirebaseFirestore
-import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
-import java.time.LocalDate
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Calendar
 
 class ScheduleDetailActivity : ComponentActivity() {
     private lateinit var dbRef: FirebaseFirestore
-    private lateinit var dbAuth: FirebaseAuth
 
     @RequiresApi(Build.VERSION_CODES.O)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -89,15 +73,12 @@ class ScheduleDetailActivity : ComponentActivity() {
 
     @RequiresApi(Build.VERSION_CODES.O)
     @SuppressLint("CoroutineCreationDuringComposition")
-    @OptIn(DelicateCoroutinesApi::class)
     @Composable
     fun ScheduleDetailPage(){
         var isLoading by remember { mutableStateOf(true) }
         var itemSize by remember{ mutableStateOf(0) }
 
         val listTiming = listOf("Breakfast", "Lunch", "Dinner")
-
-        val dates = remember{ mutableListOf<LocalDate>() }
 
         val breakfast = remember{ mutableListOf<String>() }
         val lunch = remember{ mutableListOf<String>() }
@@ -108,8 +89,6 @@ class ScheduleDetailActivity : ComponentActivity() {
         val fat = remember{ mutableListOf<String>() }
         val protein = remember{ mutableListOf<String>() }
 
-        val formatter = DateTimeFormatter.ofPattern("dd/MM/yyyy")
-
         var startDateDisplay by remember{ mutableStateOf("") }
         var endDateDisplay by remember{ mutableStateOf("") }
 
@@ -119,7 +98,6 @@ class ScheduleDetailActivity : ComponentActivity() {
         val docId = intent.extras?.getString("id", "") ?: ""
 
         val mealsByDays = remember{ mutableListOf<Map<String, Any>>() }
-        val nutrientsByDays = remember{ mutableListOf<Map<String, Any>>() }
 
         lifecycleScope.launch(Dispatchers.IO) {
             try{
@@ -233,28 +211,30 @@ class ScheduleDetailActivity : ComponentActivity() {
 
                 Column(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp)
+                        .fillMaxWidth()
+                        .padding(top = 20.dp, start = 20.dp, end = 20.dp, bottom = 60.dp)
                         .offset(y = 40.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Top
+                    verticalArrangement = Arrangement.Top,
                 ){
                     Text(
                         text = "Scheduling Detail: $scheduleName" ,
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.padding(top = 10.dp)
+                        modifier = Modifier.padding(top = 10.dp),
+                        color = Color.Black
                     )
 
                     Text(
                         text = "$startDateDisplay - $endDateDisplay",
                         fontWeight = FontWeight.SemiBold,
                         fontSize = 20.sp,
-                        modifier = Modifier.padding(vertical = 10.dp)
+                        modifier = Modifier.padding(vertical = 10.dp),
+                        color = Color.Black
                     )
 
                     LazyColumn(
-                        modifier = Modifier.padding(bottom = 40.dp)
+                        horizontalAlignment = Alignment.CenterHorizontally
                     ){
                         items(count = itemSize){item ->
                             Card(
@@ -274,15 +254,19 @@ class ScheduleDetailActivity : ComponentActivity() {
                                     Text(
                                         text = "Day ${item + 1}",
                                         fontSize = 30.sp,
-                                        fontWeight = FontWeight.Bold
+                                        fontWeight = FontWeight.Bold,
+                                        color = Color.Black
                                     )
                                     Text(
                                         text = "${listTiming[0]}: ${breakfast[item]}",
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 20.sp
+                                        fontSize = 20.sp,
+                                        color = Color.Black
                                     )
                                     ElevatedButton(
-                                        onClick = { scheduleNotification() },
+                                        onClick = {
+
+                                        },
                                         colors = ButtonDefaults.elevatedButtonColors(
                                             containerColor = BottleGreen,
                                             contentColor = Color.White
@@ -299,10 +283,13 @@ class ScheduleDetailActivity : ComponentActivity() {
                                     Text(
                                         text = "${listTiming[1]}: ${lunch[item]}",
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 20.sp
+                                        fontSize = 20.sp,
+                                        color = Color.Black
                                     )
                                     ElevatedButton(
-                                        onClick = { scheduleNotification() },
+                                        onClick = {
+
+                                        },
                                         colors = ButtonDefaults.elevatedButtonColors(
                                             containerColor = BottleGreen,
                                             contentColor = Color.White
@@ -319,10 +306,13 @@ class ScheduleDetailActivity : ComponentActivity() {
                                     Text(
                                         text = "${listTiming[2]}: ${dinner[item]} ",
                                         fontWeight = FontWeight.SemiBold,
-                                        fontSize = 20.sp
+                                        fontSize = 20.sp,
+                                        color = Color.Black
                                     )
                                     ElevatedButton(
-                                        onClick = { scheduleNotification() },
+                                        onClick = {
+
+                                        },
                                         colors = ButtonDefaults.elevatedButtonColors(
                                             containerColor = BottleGreen,
                                             contentColor = Color.White
@@ -339,88 +329,66 @@ class ScheduleDetailActivity : ComponentActivity() {
                                     Text(
                                         text = "Total Nutrients:",
                                         fontWeight = FontWeight.SemiBold,
+                                        fontSize = 20.sp,
+                                        color = Color.Black
+                                    )
+
+                                    Text(
+                                        text = "Calories: ${calories[item]}",
+                                        color = Color.Black
+                                    )
+
+                                    Text(
+                                        text = "Carbohydrates: ${carbohydrates[item]}",
+                                        color = Color.Black
+                                    )
+
+                                    Text(
+                                        text = "Fat: ${fat[item]}",
+                                        color = Color.Black
+                                    )
+
+                                    Text(
+                                        text = "Protein: ${protein[item]}",
+                                        color = Color.Black
+                                    )
+                                }
+                            }
+
+                            if(item == itemSize - 1){
+                                ElevatedButton(
+                                    onClick = {
+                                        val builder = AlertDialog.Builder(this@ScheduleDetailActivity)
+                                        builder.setTitle("Delete Schedule")
+                                        builder.setMessage("Are you sure you want to delete the schedule?")
+                                        builder.apply{
+                                            setPositiveButton("Yes"){_, _ ->
+                                                dbRef.collection("scheduling").document(docId).delete()
+                                                val intent = Intent(this@ScheduleDetailActivity, MainPageActivity::class.java)
+                                                startActivity(intent)
+                                            }
+
+                                            setNegativeButton("No"){_, _ ->
+
+                                            }
+                                        }.create().show()
+                                    },
+                                    colors = ButtonDefaults.elevatedButtonColors(
+                                        contentColor = Color.White,
+                                        containerColor = Red
+                                    ),
+                                    modifier = Modifier.padding(5.dp)
+                                ) {
+                                    Text(
+                                        text = "Delete Scheduler",
                                         fontSize = 20.sp
-                                    )
-
-                                    Text(
-                                        text = "Calories: ${calories[item]}"
-                                    )
-
-                                    Text(
-                                        text = "Carbohydrates: ${carbohydrates[item]}"
-                                    )
-
-                                    Text(
-                                        text = "Fat: ${fat[item]}"
-                                    )
-
-                                    Text(
-                                        text = "Protein: ${protein[item]}"
                                     )
                                 }
                             }
                         }
                     }
-
                 }
             }
-        }
-    }
-
-    @SuppressLint("ScheduleExactAlarm")
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun scheduleNotification(){
-        createNotificationChannel()
-
-        val intent = Intent(applicationContext, Notification::class.java)
-        val title = "DIMASS"
-        val message = "Don't forget about your meal planning"
-        intent.putExtra(titleExtra, title)
-        intent.putExtra(messageExtra, message)
-
-        val pendingIntent = PendingIntent.getBroadcast(
-            applicationContext,
-            notificationID,
-            intent,
-            PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
-        )
-
-        val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
-        val time = getTime()
-        alarmManager.setExactAndAllowWhileIdle(
-            AlarmManager.RTC_WAKEUP,
-            time,
-            pendingIntent
-        )
-
-        Log.d("Lagi", "Ya")
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun getTime(): Long{
-        val minute = LocalDateTime.now().minute.plus(1)
-        val hour = LocalDateTime.now().hour
-        val year = LocalDateTime.now().year
-        val month = LocalDateTime.now().monthValue
-        val day = LocalDateTime.now().dayOfMonth
-
-        val localDateTime = LocalDateTime.of(year, month, day, hour, minute)
-        val zoneId = ZoneId.systemDefault()
-        val zonedDateTime = localDateTime.atZone(zoneId)
-
-        return zonedDateTime.toInstant().toEpochMilli()
-    }
-
-    @RequiresApi(Build.VERSION_CODES.O)
-    private fun createNotificationChannel(){
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(channelID, "Channel Name", NotificationManager.IMPORTANCE_HIGH)
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }else{
-            val channel = NotificationChannel(channelID, "Channel Name", NotificationManager.IMPORTANCE_HIGH)
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
         }
     }
 
@@ -430,7 +398,168 @@ class ScheduleDetailActivity : ComponentActivity() {
     @Composable
     fun ScheduleDetailPreview() {
         DIMASSTheme {
-            ScheduleDetailPage()
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(LightGreen),
+                contentAlignment = Alignment.TopCenter
+            ){
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(20.dp)
+                        .offset(y = 40.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Top
+                ){
+                    Card(
+                        shape = RoundedCornerShape(10.dp),
+                        colors = CardDefaults.cardColors(
+                            containerColor = Green
+                        ),
+                        modifier = Modifier.padding(20.dp)
+                    ) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(15.dp),
+                            verticalArrangement = Arrangement.Top,
+                            horizontalAlignment = Alignment.Start
+                        ) {
+                            Text(
+                                text = "Day",
+                                fontSize = 30.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = Color.Black
+                            )
+                            Text(
+                                text = "Breakfast",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 20.sp,
+                                color = Color.Black
+                            )
+                            ElevatedButton(
+                                onClick = {
+//                            val parsedDate = LocalDate.now()
+//                            val hour = LocalDateTime.now().hour
+//                            val minute = LocalDateTime.now().minute
+//                            for(i in 0..5){
+//                                scheduleNotification(parsedDate, hour, minute + 15, i)
+//                            }
+                                },
+                                colors = ButtonDefaults.elevatedButtonColors(
+                                    containerColor = BottleGreen,
+                                    contentColor = Color.White
+                                ),
+                            ) {
+                                Text(
+                                    text = "Detail About the Recipe",
+                                    fontSize = 16.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            Text(
+                                text = "Breakfast",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 20.sp,
+                                color = Color.Black
+                            )
+                            ElevatedButton(
+                                onClick = {
+//                            val parsedDate = LocalDate.now()
+//                            val hour = LocalDateTime.now().hour
+//                            val minute = LocalDateTime.now().minute
+//                            for(i in 0..5){
+//                                scheduleNotification(parsedDate, hour, minute + 15, i)
+//                            }
+                                },
+                                colors = ButtonDefaults.elevatedButtonColors(
+                                    containerColor = BottleGreen,
+                                    contentColor = Color.White
+                                ),
+                            ) {
+                                Text(
+                                    text = "Detail About the Recipe",
+                                    fontSize = 16.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            Text(
+                                text = "Breakfast ",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 20.sp,
+                                color = Color.Black
+                            )
+                            ElevatedButton(
+                                onClick = {
+//                            val parsedDate = LocalDate.now()
+//                            val hour = LocalDateTime.now().hour
+//                            val minute = LocalDateTime.now().minute
+//                            for(i in 0..5){
+//                                scheduleNotification(parsedDate, hour, minute + 15, i)
+//                            }
+                                },
+                                colors = ButtonDefaults.elevatedButtonColors(
+                                    containerColor = BottleGreen,
+                                    contentColor = Color.White
+                                ),
+                            ) {
+                                Text(
+                                    text = "Detail About the Recipe",
+                                    fontSize = 16.sp
+                                )
+                            }
+
+                            Spacer(modifier = Modifier.height(20.dp))
+
+                            Text(
+                                text = "Total Nutrients:",
+                                fontWeight = FontWeight.SemiBold,
+                                fontSize = 20.sp,
+                                color = Color.Black
+                            )
+
+                            Text(
+                                text = "Calories:",
+                                color = Color.Black
+                            )
+
+                            Text(
+                                text = "Carbohydrates: ",
+                                color = Color.Black
+                            )
+
+                            Text(
+                                text = "Fat: ",
+                                color = Color.Black
+                            )
+
+                            Text(
+                                text = "Protein:",
+                                color = Color.Black
+                            )
+                        }
+                    }
+
+                    ElevatedButton(
+                        onClick = { /*TODO*/ },
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            contentColor = Color.LightGray,
+                            containerColor = Red
+                        )
+                    ) {
+                        Text(
+                            text = "Delete Scheduler",
+                            fontSize = 20.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+                }
+            }
         }
     }
 }

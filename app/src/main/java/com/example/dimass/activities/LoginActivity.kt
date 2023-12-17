@@ -3,6 +3,7 @@ package com.example.dimass.activities
 import android.annotation.SuppressLint
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -25,6 +26,7 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -54,29 +56,16 @@ import kotlinx.coroutines.DelicateCoroutinesApi
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.tasks.await
 
 class LoginActivity : ComponentActivity() {
     override fun onStart() {
         super.onStart()
 
         if(FirebaseAuth.getInstance().currentUser != null){
-
-            val id = FirebaseAuth.getInstance().currentUser?.uid ?: ""
-
-            val dbRef = FirebaseFirestore.getInstance()
-                .collection("accounts")
-                .document(id)
-
-            dbRef.get()
-                .addOnSuccessListener {doc ->
-                    if(doc.getLong("height") == 0L || doc.getLong("weight") == 0L){
-                        val intent = Intent(this@LoginActivity, NewUserActivity::class.java)
-                        startActivity(intent)
-                    }else{
-                        val intent = Intent(this@LoginActivity, MainPageActivity::class.java)
-                        startActivity(intent)
-                    }
-                }
+            val intent = Intent(this@LoginActivity, MainPageActivity::class.java)
+            startActivity(intent)
+            finish()
         }
     }
 
@@ -94,13 +83,11 @@ class LoginActivity : ComponentActivity() {
     @OptIn(DelicateCoroutinesApi::class)
     @Composable
     fun LoginPage() {
-        var isLoading by remember { mutableStateOf(true) }
+        var isLoading by remember { mutableStateOf(false) }
         var height by remember{ mutableStateOf(0L) }
         var weight by remember{ mutableStateOf(0L) }
 
         val dbAuth = FirebaseAuth.getInstance()
-
-        isLoading = false
 
         Box(
             modifier = Modifier
@@ -108,28 +95,21 @@ class LoginActivity : ComponentActivity() {
                 .background(LightGreen),
             contentAlignment = Alignment.TopCenter
         ) {
-            if(isLoading){
-                CircularProgressIndicator(
-                    modifier = Modifier.align(Alignment.Center),
-                    color = BottleGreen
-                )
-            }else{
-                Column(
-                    Modifier.fillMaxHeight(),
-                    verticalArrangement = Arrangement.SpaceBetween
-                ) {
-                    Column {
-                        LogoSignIn()
-                        FormSignIn()
-                    }
+            Column(
+                Modifier.fillMaxHeight(),
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column {
+                    LogoSignIn()
+                    FormSignIn()
+                }
 
-                    Row(
-                        modifier = Modifier
-                            .weight(1f, false)
-                            .padding(0.dp, 20.dp)
-                    ) {
-                        SignUpOption()
-                    }
+                Row(
+                    modifier = Modifier
+                        .weight(1f, false)
+                        .padding(0.dp, 20.dp)
+                ) {
+                    SignUpOption()
                 }
             }
         }
@@ -164,11 +144,20 @@ class LoginActivity : ComponentActivity() {
                 keyboardType = KeyboardType.Email
             ),
             label = {
-                Text("Email")
+                Text(
+                    text = "Email",
+                    color = Color.Black
+                )
             },
             modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .padding(0.dp, 40.dp, 0.dp, 0.dp)
+                .fillMaxWidth(0.8f)
+                .padding(0.dp, 40.dp, 0.dp, 0.dp),
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = Color.Black,
+                unfocusedBorderColor = Color.Black,
+                focusedLabelColor = Color.Black,
+                textColor = Color.Black
+            )
         )
 
         OutlinedTextField(
@@ -179,11 +168,21 @@ class LoginActivity : ComponentActivity() {
             ),
             visualTransformation = PasswordVisualTransformation(),
             label = {
-                Text("Password")
+                Text(
+                    text = "Password",
+                    color = Color.Black
+                )
             },
             modifier = Modifier
-                .fillMaxWidth(0.6f)
-                .padding(0.dp, 0.dp)
+                .fillMaxWidth(0.8f)
+                .padding(0.dp, 0.dp),
+
+            colors = TextFieldDefaults.outlinedTextFieldColors(
+                focusedBorderColor = Color.Black,
+                unfocusedBorderColor = Color.Black,
+                focusedLabelColor = Color.Black,
+                textColor = Color.Black
+            )
         )
 
         ElevatedButton(
