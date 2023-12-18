@@ -171,7 +171,7 @@ fun HomeScreen(){
 
                         if(itemSize == 0){
                             Text(
-                                "There's no diet scheduling yet.",
+                                "There's no scheduling yet.",
                                 color = Color.Black
                             )
                         }else{

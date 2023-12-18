@@ -1,8 +1,12 @@
 package com.example.dimass.activities
 
 import android.annotation.SuppressLint
+import android.app.AlarmManager
 import android.app.AlertDialog
+import android.app.PendingIntent
+import android.content.Context
 import android.content.Intent
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.util.Log
@@ -48,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.lifecycleScope
 import com.example.dimass.R
+import com.example.dimass.model.Notification
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
 import com.example.dimass.ui.theme.Green
@@ -93,6 +98,9 @@ class ScheduleDetailActivity : ComponentActivity() {
         var endDateDisplay by remember{ mutableStateOf("") }
 
         var scheduleName by remember{ mutableStateOf("") }
+        var notificationIDs = remember{ listOf<Int>() }
+
+        var urlFood = remember{ mutableListOf<String>() }
 
         dbRef = FirebaseFirestore.getInstance()
         val docId = intent.extras?.getString("id", "") ?: ""
@@ -109,6 +117,7 @@ class ScheduleDetailActivity : ComponentActivity() {
                     val endDate = doc.getString("endDate") ?: ""
 
                     scheduleName = doc.getString("name") ?: ""
+                    notificationIDs = doc.get("key_notification") as? List<Int> ?: listOf()
 
                     itemSize = if(program == "Daily"){
                         1
@@ -130,9 +139,10 @@ class ScheduleDetailActivity : ComponentActivity() {
                                 2 -> dinner.add(map["title"].toString())
                             }
 
+                            urlFood.add(map["sourceUrl"].toString())
+
                             counter++
                         }
-
 
                         calories.add(nutrients?.get("calories").toString())
                         carbohydrates.add(nutrients?.get("carbohydrates").toString())
@@ -265,7 +275,8 @@ class ScheduleDetailActivity : ComponentActivity() {
                                     )
                                     ElevatedButton(
                                         onClick = {
-
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlFood[item]))
+                                            startActivity(intent)
                                         },
                                         colors = ButtonDefaults.elevatedButtonColors(
                                             containerColor = BottleGreen,
@@ -288,7 +299,8 @@ class ScheduleDetailActivity : ComponentActivity() {
                                     )
                                     ElevatedButton(
                                         onClick = {
-
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlFood[item + 1]))
+                                            startActivity(intent)
                                         },
                                         colors = ButtonDefaults.elevatedButtonColors(
                                             containerColor = BottleGreen,
@@ -311,7 +323,8 @@ class ScheduleDetailActivity : ComponentActivity() {
                                     )
                                     ElevatedButton(
                                         onClick = {
-
+                                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(urlFood[item + 2]))
+                                            startActivity(intent)
                                         },
                                         colors = ButtonDefaults.elevatedButtonColors(
                                             containerColor = BottleGreen,
@@ -363,6 +376,17 @@ class ScheduleDetailActivity : ComponentActivity() {
                                         builder.setMessage("Are you sure you want to delete the schedule?")
                                         builder.apply{
                                             setPositiveButton("Yes"){_, _ ->
+                                                notificationIDs.forEach { id ->
+                                                    val alarmManager = getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                                                    val intent = Intent(applicationContext, Notification::class.java)
+                                                    val pendingIntent = PendingIntent.getBroadcast(
+                                                        applicationContext,
+                                                        id,
+                                                        intent,
+                                                        PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT
+                                                    )
+                                                    alarmManager.cancel(pendingIntent)
+                                                }
                                                 dbRef.collection("scheduling").document(docId).delete()
                                                 val intent = Intent(this@ScheduleDetailActivity, MainPageActivity::class.java)
                                                 startActivity(intent)

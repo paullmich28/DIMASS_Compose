@@ -6,8 +6,10 @@ import android.util.Log
 import android.widget.Toast
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -26,8 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.dimass.R
 import com.example.dimass.activities.LoginActivity
 import com.example.dimass.ui.theme.BottleGreen
@@ -121,43 +125,76 @@ fun ProfileScreen(){
                 )
 
                 Text(
-                    text = "$fName $lName"
+                    text = "$fName $lName",
+                    color = Color.Black,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold
                 )
 
                 Text(
-                    text = "Height: $height"
+                    text = "Height: $height",
+                    color = Color.Black
                 )
 
                 Text(
-                    text = "Weight: $weight"
+                    text = "Weight: $weight",
+                    color = Color.Black
                 )
 
                 Text(
-                    text = "BMI: $bmi"
+                    text = "BMI: $bmi",
+                    color = Color.Black
                 )
+                
+                Row(
+                    modifier = Modifier.padding(vertical = 25.dp, horizontal = 25.dp)
+                ){
+                    ElevatedButton(
+                        onClick = {
+                            FirebaseAuth.getInstance().signOut()
+                            Toast.makeText(context, "Signed Out from your account", Toast.LENGTH_LONG).show()
+                            val intent = Intent(context, LoginActivity::class.java)
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f)
+                            .padding(end = 5.dp),
 
-                ElevatedButton(
-                    onClick = {
-                        FirebaseAuth.getInstance().signOut()
-                        Toast.makeText(context, "Signed Out from your account", Toast.LENGTH_LONG).show()
-                        val intent = Intent(context, LoginActivity::class.java)
-                        context.startActivity(intent)
-                    },
-                    modifier = Modifier
-                        .padding(0.dp, 10.dp)
-                        .fillMaxWidth(0.6f),
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = BottleGreen,
+                            contentColor = Color.White
+                        ),
 
-                    colors = ButtonDefaults.elevatedButtonColors(
-                        containerColor = BottleGreen,
-                        contentColor = Color.White
-                    ),
+                        content = {
+                            Text(
+                                text = "Edit Profile"
+                            )
+                        }
+                    )
 
-                    content = {
-                        Text(
-                            text = "Sign Out"
-                        )
-                    }
-                )
+                    ElevatedButton(
+                        onClick = {
+                            FirebaseAuth.getInstance().signOut()
+                            Toast.makeText(context, "Signed Out from your account", Toast.LENGTH_LONG).show()
+                            val intent = Intent(context, LoginActivity::class.java)
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth(1f)
+                            .padding(start = 5.dp),
+
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = BottleGreen,
+                            contentColor = Color.White
+                        ),
+
+                        content = {
+                            Text(
+                                text = "Sign Out"
+                            )
+                        }
+                    )
+                }
             }
         }
     }
@@ -167,6 +204,87 @@ fun ProfileScreen(){
 @Composable
 fun ProfileScreenPreview(){
     DIMASSTheme {
-        ProfileScreen()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(LightGreen),
+            contentAlignment = Alignment.TopCenter
+        ){
+            Column(
+                horizontalAlignment = Alignment.CenterHorizontally,
+                modifier = Modifier
+                    .padding(0.dp, 48.dp)
+            ) {
+                Image(
+                    painter = painterResource(id = R.drawable.baseline_account_circle_24),
+                    contentDescription = "Logo",
+                    modifier = Modifier
+                        .size(100.dp, 100.dp)
+                )
+
+                Text(
+                    text = "Nama",
+                    color = Color.Black,
+                    fontSize = 24.sp,
+                    fontWeight = FontWeight.SemiBold,
+                    modifier = Modifier.padding(vertical = 24.dp)
+                )
+
+                Text(
+                    text = "Height:",
+                    color = Color.Black
+                )
+
+                Text(
+                    text = "Weight:",
+                    color = Color.Black
+                )
+
+                Text(
+                    text = "BMI:",
+                    color = Color.Black
+                )
+
+                Row(
+                    modifier = Modifier.padding(vertical = 25.dp, horizontal = 25.dp)
+                ){
+                    ElevatedButton(
+                        onClick = {},
+                        modifier = Modifier
+                            .fillMaxWidth(0.5f)
+                            .padding(end = 5.dp),
+
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = BottleGreen,
+                            contentColor = Color.White
+                        ),
+
+                        content = {
+                            Text(
+                                text = "Edit Profile"
+                            )
+                        }
+                    )
+
+                    ElevatedButton(
+                        onClick = {},
+                        modifier = Modifier
+                            .fillMaxWidth(1f)
+                            .padding(start = 5.dp),
+
+                        colors = ButtonDefaults.elevatedButtonColors(
+                            containerColor = BottleGreen,
+                            contentColor = Color.White
+                        ),
+
+                        content = {
+                            Text(
+                                text = "Sign Out"
+                            )
+                        }
+                    )
+                }
+            }
+        }
     }
 }

@@ -97,9 +97,12 @@ class LoginActivity : ComponentActivity() {
         ) {
             Column(
                 Modifier.fillMaxHeight(),
-                verticalArrangement = Arrangement.SpaceBetween
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                Column {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ){
                     LogoSignIn()
                     FormSignIn()
                 }
