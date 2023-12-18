@@ -33,6 +33,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.dimass.R
+import com.example.dimass.activities.EditProfileActivity
 import com.example.dimass.activities.LoginActivity
 import com.example.dimass.ui.theme.BottleGreen
 import com.example.dimass.ui.theme.DIMASSTheme
@@ -151,9 +152,7 @@ fun ProfileScreen(){
                 ){
                     ElevatedButton(
                         onClick = {
-                            FirebaseAuth.getInstance().signOut()
-                            Toast.makeText(context, "Signed Out from your account", Toast.LENGTH_LONG).show()
-                            val intent = Intent(context, LoginActivity::class.java)
+                            val intent = Intent(context, EditProfileActivity::class.java)
                             context.startActivity(intent)
                         },
                         modifier = Modifier

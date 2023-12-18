@@ -381,9 +381,17 @@ class NewScheduleActivity : ComponentActivity() {
                         }else{
                             if(listProgram[selectedOption] == "Daily"){
                                 val call = if(typeOfFood == "Anything"){
-                                    apiServiceDaily.getDailyData(apiKey, "day", null, null)
+                                    if(dietOrMassgain == "Diet"){
+                                        apiServiceDaily.getDailyData(apiKey, "day", 1500, null)
+                                    }else{
+                                        apiServiceDaily.getDailyData(apiKey, "day", null, null)
+                                    }
                                 }else{
-                                    apiServiceDaily.getDailyData(apiKey, "day", null, typeOfFood.lowercase())
+                                    if(dietOrMassgain == "Diet"){
+                                        apiServiceDaily.getDailyData(apiKey, "day", 1500, typeOfFood.lowercase())
+                                    }else{
+                                        apiServiceDaily.getDailyData(apiKey, "day", null, typeOfFood.lowercase())
+                                    }
                                 }
 
                                 call.enqueue(object: Callback<DailyModel>{
@@ -442,10 +450,19 @@ class NewScheduleActivity : ComponentActivity() {
                                 })
                             }else{
                                 val call = if(typeOfFood == "Anything"){
-                                    apiServiceWeekly.getWeeklyData(apiKey, "week", null, null)
+                                    if(dietOrMassgain == "Diet"){
+                                        apiServiceWeekly.getWeeklyData(apiKey, "week", 1500, null)
+                                    }else{
+                                        apiServiceWeekly.getWeeklyData(apiKey, "week", null, null)
+                                    }
                                 }else{
-                                    apiServiceWeekly.getWeeklyData(apiKey, "week", null, typeOfFood.lowercase())
+                                    if(dietOrMassgain == "Diet"){
+                                        apiServiceWeekly.getWeeklyData(apiKey, "week", 1500, typeOfFood.lowercase())
+                                    }else{
+                                        apiServiceWeekly.getWeeklyData(apiKey, "week", null, typeOfFood.lowercase())
+                                    }
                                 }
+
                                 call.enqueue(object: Callback<WeeklyModel>{
                                     override fun onResponse(call: Call<WeeklyModel>, response: Response<WeeklyModel>) {
                                         if(response.isSuccessful){
