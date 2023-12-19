@@ -83,11 +83,11 @@ class EditProfileActivity : ComponentActivity() {
         }
 
         var weight by remember {
-            mutableStateOf(0L)
+            mutableStateOf(0f)
         }
 
         var height by remember {
-            mutableStateOf(0L)
+            mutableStateOf(0f)
         }
 
         var userProgram by remember {
@@ -108,8 +108,8 @@ class EditProfileActivity : ComponentActivity() {
 
                     fName = docs.getString("firstName") ?: ""
                     lName = docs.getString("lastName") ?: ""
-                    weight = docs.getLong("weight") ?: 0L
-                    height = docs.getLong("height") ?: 0L
+                    weight = docs.getLong("weight")?.toFloat() ?: 0f
+                    height = docs.getLong("height")?.toFloat() ?: 0f
                     userProgram = docs.getString("program") ?: ""
                 } catch (e: Exception) {
                     Log.e("exception", "Error", e)
@@ -174,7 +174,7 @@ class EditProfileActivity : ComponentActivity() {
 
                     OutlinedTextField(
                         value = "$weight",
-                        onValueChange = {weight = it.toLong()},
+                        onValueChange = {weight = it.toFloat()},
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Decimal
                         ),
@@ -185,7 +185,7 @@ class EditProfileActivity : ComponentActivity() {
 
                     OutlinedTextField(
                         value = "$height",
-                        onValueChange = {height = it.toLong()},
+                        onValueChange = {height = it.toFloat()},
                         keyboardOptions = KeyboardOptions(
                             keyboardType = KeyboardType.Decimal
                         ),
@@ -241,19 +241,18 @@ class EditProfileActivity : ComponentActivity() {
                             if(
                                 fName.isEmpty() ||
                                 lName.isEmpty() ||
-                                weight == 0L ||
-                                height == 0L
+                                weight == 0f ||
+                                height == 0f
                             ){
                                 Toast.makeText(context, "Please fill the form", Toast.LENGTH_LONG).show()
                             }else{
-                                val bmi = (weight/((height/100L) * (height/100L)))
                                 FirebaseFirestore.getInstance().collection("accounts").document(id).update(
                                     mapOf(
                                         "firstName" to fName,
                                         "lastName" to lName,
                                         "weight" to weight,
                                         "height" to height,
-                                        "bmi" to bmi,
+                                        "bmi" to (weight/((height/100) * (height/100))),
                                         "program" to userProgram
                                     )
                                 )
