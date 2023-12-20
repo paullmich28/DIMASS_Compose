@@ -170,6 +170,8 @@ class ScheduleDetailActivity : ComponentActivity() {
                                 }
 
                                 counter++
+
+                                urlFood.add(map["sourceUrl"].toString())
                             }
 
                             calories.add(nutrients?.get("calories").toString())
