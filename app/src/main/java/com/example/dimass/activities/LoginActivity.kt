@@ -194,12 +194,12 @@ class LoginActivity : ComponentActivity() {
                     Toast.makeText(context, "Your account isn't valid", Toast.LENGTH_LONG).show()
                 }else{
                     dbAuth.signInWithEmailAndPassword(email, password)
-                        .addOnCompleteListener{
+                        .addOnSuccessListener{
                             Toast.makeText(context, "Login Successful", Toast.LENGTH_LONG).show()
                             startActivity(Intent(this@LoginActivity, MainPageActivity::class.java))
                             finish()
                         }.addOnFailureListener{
-                            Toast.makeText(context, it.toString(), Toast.LENGTH_LONG).show()
+                            Toast.makeText(context, "Account not valid", Toast.LENGTH_LONG).show()
                         }
                 }
             },
